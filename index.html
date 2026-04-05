@@ -39,11 +39,12 @@ button{
 }
 
 input{
-  padding:10px;
+  padding:12px;
   border-radius:10px;
   border:none;
   width:85%;
   margin:10px;
+  font-size:15px;
 }
 
 .place{
@@ -70,29 +71,6 @@ input{
   border-radius:8px;
   font-size:12px;
 }
-
-/* toast */
-.toast{
-  position:fixed;
-  bottom:20px;
-  left:50%;
-  transform:translateX(-50%);
-  background:#000;
-  padding:10px 15px;
-  border-radius:10px;
-}
-
-/* confetti */
-.confetti{
-  position:fixed;
-  width:8px;
-  height:8px;
-  top:-10px;
-  animation:fall 2s linear forwards;
-}
-@keyframes fall{
-  to{ transform:translateY(100vh) rotate(360deg); opacity:0;}
-}
 </style>
 </head>
 
@@ -108,42 +86,32 @@ input{
     <button onclick="getLocation()">Get Location</button>
   </div>
 
-  <input type="text" placeholder="Search..." oninput="searchPlaces(this.value)">
-
-  <div>
-    <button onclick="setFilter('all')">All</button>
-    <button onclick="setFilter('restaurant')">Food</button>
-    <button onclick="setFilter('temple')">Temple</button>
-    <button onclick="setFilter('park')">Nature</button>
-  </div>
+  <!-- 🔥 GLOBAL SEARCH -->
+  <input type="text" placeholder="Search any place in world..."
+  onkeypress="if(event.key==='Enter') searchGlobal(this.value)">
 
   <div id="map"></div>
 
   <h3>📍 Nearby Places</h3>
   <div id="places"></div>
 
-  <h3>🎯 Bucket List</h3>
-  <div id="bucket"></div>
-
-  <h3>🏆 Leaderboard</h3>
-  <div id="leaderboard"></div>
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <script>
-let allPlaces=[];
-let filterType="all";
-let searchText="";
-
-let visited=JSON.parse(localStorage.getItem("visited"))||[];
-let bucket=JSON.parse(localStorage.getItem("bucket"))||[];
-
-updatePoints();
-renderBucket();
-renderLeaderboard();
-
 let map;
+
+function initMap(lat,lon){
+  if(map) map.remove();
+
+  map=L.map('map').setView([lat,lon],13);
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png')
+  .addTo(map);
+
+  L.marker([lat,lon]).addTo(map).bindPopup("You").openPopup();
+}
 
 function getLocation(){
   navigator.geolocation.getCurrentPosition(pos=>{
@@ -156,17 +124,6 @@ function getLocation(){
     initMap(lat,lon);
     fetchPlaces(lat,lon);
   });
-}
-
-function initMap(lat,lon){
-  if(map) map.remove();
-
-  map=L.map('map').setView([lat,lon],13);
-
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png')
-  .addTo(map);
-
-  L.marker([lat,lon]).addTo(map).bindPopup("You").openPopup();
 }
 
 async function fetchPlaces(lat,lon){
@@ -184,122 +141,44 @@ async function fetchPlaces(lat,lon){
   const res=await fetch(url);
   const data=await res.json();
 
-  allPlaces=data.elements.filter(p=>p.tags && p.tags.name);
-  renderPlaces();
-}
+  let html="<h3>Nearby</h3>";
 
-function renderPlaces(){
-  const box=document.getElementById("places");
-  box.innerHTML="";
-
-  allPlaces
-  .filter(p=>{
-    const name=p.tags.name.toLowerCase();
-    const matchSearch=name.includes(searchText);
-    const matchType=(filterType==="all") ||
-      Object.values(p.tags).join().includes(filterType);
-
-    return matchSearch && matchType;
-  })
-  .slice(0,10)
-  .forEach(p=>{
-    const name=p.tags.name;
-
-    box.innerHTML+=`
-    <div class="place">
-      <b>${name}</b>
-      <span class="badge">${getType(p)}</span><br/>
-      <button onclick="markVisited('${name}')">Visited</button>
-      <button onclick="addBucket('${name}')">Bucket</button>
-      <button onclick="focusMap(${p.lat},${p.lon},'${name}')">Map</button>
-    </div>`;
+  data.elements.slice(0,10).forEach(p=>{
+    const name=p.tags?.name || "Unknown Place";
+    html+=`<div class="place">${name}</div>`;
   });
+
+  document.getElementById("places").innerHTML=html;
 }
 
-function focusMap(lat,lon,name){
-  map.setView([lat,lon],15);
-  L.marker([lat,lon]).addTo(map).bindPopup(name).openPopup();
-}
+<!-- 🔥 GLOBAL SEARCH FUNCTION -->
+async function searchGlobal(query){
+  if(!query) return;
 
-function getType(p){
-  return p.tags.tourism||p.tags.amenity||p.tags.leisure||"Place";
-}
+  const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`;
 
-function markVisited(name){
-  if(!visited.includes(name)){
-    visited.push(name);
-    localStorage.setItem("visited",JSON.stringify(visited));
-    updatePoints();
-    toast("🎉 +10 points");
-    confetti();
-    renderLeaderboard();
+  const res = await fetch(url);
+  const data = await res.json();
+
+  if(!data.length){
+    alert("Place not found ❌");
+    return;
   }
-}
 
-function updatePoints(){
-  document.getElementById("points").innerText =
-    "⭐ Points: "+visited.length*10;
-}
+  const place = data[0];
+  const lat = parseFloat(place.lat);
+  const lon = parseFloat(place.lon);
 
-function addBucket(name){
-  if(!bucket.includes(name)){
-    bucket.push(name);
-    localStorage.setItem("bucket",JSON.stringify(bucket));
-    renderBucket();
-  }
-}
+  document.getElementById("location").innerText =
+    place.display_name;
 
-function renderBucket(){
-  const box=document.getElementById("bucket");
-  box.innerHTML="";
+  initMap(lat,lon);
 
-  bucket.forEach(b=>{
-    box.innerHTML+=`
-    <div class="place">
-      ${b}
-      <button onclick="removeBucket('${b}')">❌</button>
-    </div>`;
-  });
-}
+  L.marker([lat, lon]).addTo(map)
+    .bindPopup(place.display_name)
+    .openPopup();
 
-function removeBucket(name){
-  bucket=bucket.filter(x=>x!==name);
-  localStorage.setItem("bucket",JSON.stringify(bucket));
-  renderBucket();
-}
-
-function renderLeaderboard(){
-  document.getElementById("leaderboard").innerHTML =
-    `<div class="place">You - ${visited.length*10} pts</div>`;
-}
-
-function setFilter(type){
-  filterType=type;
-  renderPlaces();
-}
-
-function searchPlaces(text){
-  searchText=text.toLowerCase();
-  renderPlaces();
-}
-
-function toast(msg){
-  const t=document.createElement("div");
-  t.className="toast";
-  t.innerText=msg;
-  document.body.appendChild(t);
-  setTimeout(()=>t.remove(),2000);
-}
-
-function confetti(){
-  for(let i=0;i<20;i++){
-    const el=document.createElement("div");
-    el.className="confetti";
-    el.style.left=Math.random()*100+"%";
-    el.style.background=["red","yellow","blue","green"][Math.floor(Math.random()*4)];
-    document.body.appendChild(el);
-    setTimeout(()=>el.remove(),2000);
-  }
+  fetchPlaces(lat, lon);
 }
 </script>
 
