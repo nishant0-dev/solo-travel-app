@@ -1,45 +1,42 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Solo Travel Pro+</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wanderer App</title>
 
-<!-- Leaflet Map CSS -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 
 <style>
 body{
   margin:0;
-  font-family: 'Segoe UI', sans-serif;
-  background: linear-gradient(to bottom,#0f2027,#203a43,#2c5364);
+  font-family:'Segoe UI',sans-serif;
+  background:linear-gradient(to bottom,#0f2027,#203a43,#2c5364);
   color:white;
   text-align:center;
 }
+
 .container{ margin-top:40px; }
 
 .card{
-  background: rgba(255,255,255,0.1);
+  background:rgba(255,255,255,0.1);
   padding:20px;
   margin:15px auto;
   border-radius:15px;
   width:92%;
   max-width:480px;
-  backdrop-filter: blur(12px);
-  box-shadow:0 0 20px rgba(0,0,0,0.3);
+  backdrop-filter:blur(12px);
 }
 
 button{
   padding:10px 14px;
-  margin:6px;
+  margin:5px;
   border:none;
   border-radius:10px;
-  background: linear-gradient(to right,#00c6ff,#0072ff);
+  background:linear-gradient(to right,#00c6ff,#0072ff);
   color:white;
   cursor:pointer;
-  transition:0.2s;
 }
-button:hover{ transform:scale(1.05); }
 
 input{
   padding:10px;
@@ -50,16 +47,14 @@ input{
 }
 
 .place{
-  background: rgba(255,255,255,0.1);
+  background:rgba(255,255,255,0.1);
   margin:10px auto;
-  padding:14px;
-  border-radius:12px;
+  padding:12px;
+  border-radius:10px;
   width:92%;
   max-width:480px;
   text-align:left;
-  transition:0.2s;
 }
-.place:hover{ transform:translateY(-3px); }
 
 #map{
   height:300px;
@@ -70,18 +65,28 @@ input{
 }
 
 .badge{
-  display:inline-block;
-  padding:4px 8px;
+  background:#1abc9c;
+  padding:3px 8px;
   border-radius:8px;
   font-size:12px;
-  background:#1abc9c;
-  margin-left:6px;
 }
 
-/* simple confetti */
+/* toast */
+.toast{
+  position:fixed;
+  bottom:20px;
+  left:50%;
+  transform:translateX(-50%);
+  background:#000;
+  padding:10px 15px;
+  border-radius:10px;
+}
+
+/* confetti */
 .confetti{
   position:fixed;
-  width:8px;height:8px;
+  width:8px;
+  height:8px;
   top:-10px;
   animation:fall 2s linear forwards;
 }
@@ -94,7 +99,7 @@ input{
 <body>
 
 <div class="container">
-  <h1>🌍 Wanderer </h1>
+  <h1>🌍 Wanderer</h1>
   <p id="points">⭐ Points: 0</p>
 
   <div class="card">
@@ -103,7 +108,7 @@ input{
     <button onclick="getLocation()">Get Location</button>
   </div>
 
-  <input type="text" placeholder="Search places..." oninput="searchPlaces(this.value)">
+  <input type="text" placeholder="Search..." oninput="searchPlaces(this.value)">
 
   <div>
     <button onclick="setFilter('all')">All</button>
@@ -124,12 +129,12 @@ input{
   <div id="leaderboard"></div>
 </div>
 
-<!-- Leaflet JS -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <script>
 let allPlaces=[];
 let filterType="all";
+let searchText="";
 
 let visited=JSON.parse(localStorage.getItem("visited"))||[];
 let bucket=JSON.parse(localStorage.getItem("bucket"))||[];
@@ -138,7 +143,7 @@ updatePoints();
 renderBucket();
 renderLeaderboard();
 
-let map, marker;
+let map;
 
 function getLocation(){
   navigator.geolocation.getCurrentPosition(pos=>{
@@ -154,15 +159,14 @@ function getLocation(){
 }
 
 function initMap(lat,lon){
-  if(map){ map.remove(); }
+  if(map) map.remove();
+
   map=L.map('map').setView([lat,lon],13);
 
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
-    attribution:'© OpenStreetMap'
-  }).addTo(map);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png')
+  .addTo(map);
 
-  marker=L.marker([lat,lon]).addTo(map)
-    .bindPopup("You are here").openPopup();
+  L.marker([lat,lon]).addTo(map).bindPopup("You").openPopup();
 }
 
 async function fetchPlaces(lat,lon){
@@ -176,6 +180,7 @@ async function fetchPlaces(lat,lon){
   out;`;
 
   const url="https://overpass-api.de/api/interpreter?data="+encodeURIComponent(query);
+
   const res=await fetch(url);
   const data=await res.json();
 
@@ -189,8 +194,12 @@ function renderPlaces(){
 
   allPlaces
   .filter(p=>{
-    if(filterType==="all") return true;
-    return Object.values(p.tags).join().includes(filterType);
+    const name=p.tags.name.toLowerCase();
+    const matchSearch=name.includes(searchText);
+    const matchType=(filterType==="all") ||
+      Object.values(p.tags).join().includes(filterType);
+
+    return matchSearch && matchType;
   })
   .slice(0,10)
   .forEach(p=>{
@@ -202,8 +211,14 @@ function renderPlaces(){
       <span class="badge">${getType(p)}</span><br/>
       <button onclick="markVisited('${name}')">Visited</button>
       <button onclick="addBucket('${name}')">Bucket</button>
+      <button onclick="focusMap(${p.lat},${p.lon},'${name}')">Map</button>
     </div>`;
   });
+}
+
+function focusMap(lat,lon,name){
+  map.setView([lat,lon],15);
+  L.marker([lat,lon]).addTo(map).bindPopup(name).openPopup();
 }
 
 function getType(p){
@@ -215,6 +230,7 @@ function markVisited(name){
     visited.push(name);
     localStorage.setItem("visited",JSON.stringify(visited));
     updatePoints();
+    toast("🎉 +10 points");
     confetti();
     renderLeaderboard();
   }
@@ -236,17 +252,25 @@ function addBucket(name){
 function renderBucket(){
   const box=document.getElementById("bucket");
   box.innerHTML="";
+
   bucket.forEach(b=>{
-    box.innerHTML+=`<div class="place">${b}</div>`;
+    box.innerHTML+=`
+    <div class="place">
+      ${b}
+      <button onclick="removeBucket('${b}')">❌</button>
+    </div>`;
   });
 }
 
+function removeBucket(name){
+  bucket=bucket.filter(x=>x!==name);
+  localStorage.setItem("bucket",JSON.stringify(bucket));
+  renderBucket();
+}
+
 function renderLeaderboard(){
-  const box=document.getElementById("leaderboard");
-  box.innerHTML = `
-    <div class="place">
-      You 🧍‍♂️ - ${visited.length*10} pts
-    </div>`;
+  document.getElementById("leaderboard").innerHTML =
+    `<div class="place">You - ${visited.length*10} pts</div>`;
 }
 
 function setFilter(type){
@@ -255,15 +279,16 @@ function setFilter(type){
 }
 
 function searchPlaces(text){
-  const box=document.getElementById("places");
-  box.innerHTML="";
+  searchText=text.toLowerCase();
+  renderPlaces();
+}
 
-  allPlaces
-  .filter(p=>p.tags.name.toLowerCase().includes(text.toLowerCase()))
-  .slice(0,10)
-  .forEach(p=>{
-    box.innerHTML+=`<div class="place">${p.tags.name}</div>`;
-  });
+function toast(msg){
+  const t=document.createElement("div");
+  t.className="toast";
+  t.innerText=msg;
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(),2000);
 }
 
 function confetti(){
