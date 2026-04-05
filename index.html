@@ -15,7 +15,7 @@
     }
 
     .container {
-      margin-top: 100px;
+      margin-top: 80px;
     }
 
     .card {
@@ -52,31 +52,37 @@
 
     <div class="card">
       <h2>📍 Nearby Place</h2>
-      <p id="location">Detecting location...</p>
+      <p id="location">Click button to get location</p>
       <button onclick="getLocation()">Get My Location</button>
     </div>
+
+    <!-- ✅ IMPORTANT: this should be OUTSIDE script -->
+    <div id="places"></div>
+
   </div>
 
- <script>
-    <div id="places"></div>
+<script>
 async function getLocation() {
+  const el = document.getElementById("location");
+  el.innerText = "Requesting permission...";
+
   if (!navigator.geolocation) {
-    document.getElementById("location").innerText = "Geolocation not supported";
+    el.innerText = "Geolocation not supported";
     return;
   }
-  navigator.geolocation.getCurrentPosition(showPosition, () => {
-    document.getElementById("location").innerText = "Permission denied";
-  });
-}
 
-async function showPosition(position) {
-  const lat = position.coords.latitude;
-  const lon = position.coords.longitude;
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      const lat = pos.coords.latitude;
+      const lon = pos.coords.longitude;
 
-  document.getElementById("location").innerText =
-    "📍 Your Location: " + lat.toFixed(4) + ", " + lon.toFixed(4);
-
-  fetchNearbyPlaces(lat, lon);
+      el.innerText = "📍 " + lat.toFixed(4) + ", " + lon.toFixed(4);
+      fetchNearbyPlaces(lat, lon);
+    },
+    () => {
+      el.innerText = "❌ Permission denied";
+    }
+  );
 }
 
 async function fetchNearbyPlaces(lat, lon) {
@@ -93,32 +99,36 @@ async function fetchNearbyPlaces(lat, lon) {
 
   const url = "https://overpass-api.de/api/interpreter?data=" + encodeURIComponent(query);
 
+  const box = document.getElementById("places");
+  box.innerHTML = "Loading nearby places...";
+
   try {
     const res = await fetch(url);
     const data = await res.json();
 
-    let output = "<h3>🌍 Nearby Places</h3>";
-
     if (!data.elements.length) {
-      output += "<p>No places found nearby</p>";
-    } else {
-      data.elements.slice(0, 10).forEach(place => {
-        const name = place.tags.name || "Unknown Place";
-        const dist = getDistance(lat, lon, place.lat, place.lon);
-
-        output += `
-          <div style="background:rgba(255,255,255,0.1);padding:10px;margin:10px;border-radius:8px;">
-            <b>${name}</b><br/>
-            📍 ${dist.toFixed(2)} km away
-          </div>
-        `;
-      });
+      box.innerHTML = "No places found";
+      return;
     }
 
-    document.getElementById("places").innerHTML = output;
+    let html = "<h3>🌍 Nearby Places</h3>";
+
+    data.elements.slice(0, 10).forEach(place => {
+      const name = place.tags.name || "Unknown Place";
+      const dist = getDistance(lat, lon, place.lat, place.lon);
+
+      html += `
+        <div style="background:rgba(255,255,255,0.1);padding:10px;margin:10px;border-radius:8px;">
+          <b>${name}</b><br/>
+          📍 ${dist.toFixed(2)} km away
+        </div>
+      `;
+    });
+
+    box.innerHTML = html;
 
   } catch (e) {
-    document.getElementById("places").innerText = "Error loading places";
+    box.innerHTML = "Error loading places";
   }
 }
 
@@ -137,8 +147,6 @@ function getDistance(lat1, lon1, lat2, lon2) {
   return R * c;
 }
 </script>
- 
-  
 
 </body>
 </html>
