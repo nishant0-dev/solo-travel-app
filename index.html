@@ -3,104 +3,93 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Wanderer App</title>
+<title>Wanderer Pro</title>
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 
 <style>
 body{
   margin:0;
-  font-family:'Segoe UI',sans-serif;
-  background:linear-gradient(to bottom,#0f2027,#203a43,#2c5364);
+  font-family:sans-serif;
+  background:#0f2027;
   color:white;
-  text-align:center;
+  overflow-x:hidden;
 }
 
-.container{ margin-top:40px; }
-
-.card{
-  background:rgba(255,255,255,0.1);
+.screen{
+  width:100%;
+  height:100vh;
+  position:absolute;
+  top:0;
+  left:0;
+  transition:0.5s;
   padding:20px;
-  margin:15px auto;
-  border-radius:15px;
-  width:92%;
-  max-width:480px;
-  backdrop-filter:blur(12px);
 }
+
+#home{ background:#0f2027; }
+#placesScreen{ background:#203a43; left:100%; }
 
 button{
-  padding:10px 14px;
+  padding:10px;
   margin:5px;
   border:none;
-  border-radius:10px;
-  background:linear-gradient(to right,#00c6ff,#0072ff);
-  color:white;
-  cursor:pointer;
-}
-
-input{
-  padding:12px;
-  border-radius:10px;
-  border:none;
-  width:85%;
-  margin:10px;
-  font-size:15px;
+  border-radius:8px;
+  background:#00c6ff;
 }
 
 .place{
   background:rgba(255,255,255,0.1);
-  margin:10px auto;
-  padding:12px;
+  margin:10px;
+  padding:10px;
   border-radius:10px;
-  width:92%;
-  max-width:480px;
-  text-align:left;
 }
 
-#map{
-  height:300px;
-  width:92%;
-  max-width:480px;
-  margin:15px auto;
-  border-radius:12px;
-}
-
-.badge{
-  background:#1abc9c;
-  padding:3px 8px;
-  border-radius:8px;
-  font-size:12px;
-}
+#map{ height:250px; margin:10px 0; }
 </style>
 </head>
 
 <body>
 
-<div class="container">
-  <h1>🌍 Wanderer</h1>
-  <p id="points">⭐ Points: 0</p>
+<!-- HOME SCREEN -->
+<div id="home" class="screen">
+  <h2>🌍 Wanderer</h2>
 
-  <div class="card">
-    <h3>📍 Your Location</h3>
-    <p id="location">Click below</p>
-    <button onclick="getLocation()">Get Location</button>
-  </div>
+  <button onclick="getLocation()">Get Location</button>
 
-  <!-- 🔥 GLOBAL SEARCH -->
-  <input type="text" placeholder="Search any place in world..."
+  <input placeholder="Search world..."
   onkeypress="if(event.key==='Enter') searchGlobal(this.value)">
 
+  <button onclick="openPlaces()">Explore Nearby →</button>
+
   <div id="map"></div>
+</div>
+
+<!-- PLACES SCREEN -->
+<div id="placesScreen" class="screen">
+  <button onclick="backHome()">⬅ Back</button>
 
   <h3>📍 Nearby Places</h3>
   <div id="places"></div>
 
+  <h3>🎯 Bucket List</h3>
+  <div id="bucket"></div>
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <script>
 let map;
+let bucket = JSON.parse(localStorage.getItem("bucket")) || [];
+
+function openPlaces(){
+  document.getElementById("home").style.left="-100%";
+  document.getElementById("placesScreen").style.left="0";
+}
+
+function backHome(){
+  document.getElementById("home").style.left="0";
+  document.getElementById("placesScreen").style.left="100%";
+}
 
 function initMap(lat,lon){
   if(map) map.remove();
@@ -110,7 +99,7 @@ function initMap(lat,lon){
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png')
   .addTo(map);
 
-  L.marker([lat,lon]).addTo(map).bindPopup("You").openPopup();
+  L.marker([lat,lon]).addTo(map);
 }
 
 function getLocation(){
@@ -118,67 +107,63 @@ function getLocation(){
     const lat=pos.coords.latitude;
     const lon=pos.coords.longitude;
 
-    document.getElementById("location").innerText =
-      lat.toFixed(4)+", "+lon.toFixed(4);
-
     initMap(lat,lon);
     fetchPlaces(lat,lon);
   });
 }
 
-async function fetchPlaces(lat,lon){
-  const query=`
-  [out:json];
-  (
-    node["tourism"](around:3000, ${lat}, ${lon});
-    node["amenity"](around:3000, ${lat}, ${lon});
-    node["leisure"](around:3000, ${lat}, ${lon});
-  );
-  out;`;
-
-  const url="https://overpass-api.de/api/interpreter?data="+encodeURIComponent(query);
-
+async function searchGlobal(query){
+  const url=`https://nominatim.openstreetmap.org/search?format=json&q=${query}`;
   const res=await fetch(url);
   const data=await res.json();
 
-  let html="<h3>Nearby</h3>";
+  if(!data.length) return;
 
+  const lat=parseFloat(data[0].lat);
+  const lon=parseFloat(data[0].lon);
+
+  initMap(lat,lon);
+  fetchPlaces(lat,lon);
+}
+
+async function fetchPlaces(lat,lon){
+  const query=`
+  [out:json];
+  node["amenity"](around:2000, ${lat}, ${lon});
+  out;`;
+
+  const res=await fetch("https://overpass-api.de/api/interpreter?data="+encodeURIComponent(query));
+  const data=await res.json();
+
+  let html="";
   data.elements.slice(0,10).forEach(p=>{
-    const name=p.tags?.name || "Unknown Place";
-    html+=`<div class="place">${name}</div>`;
+    const name=p.tags?.name || "Place";
+
+    html+=`
+    <div class="place">
+      ${name}
+      <button onclick="addBucket('${name}')">Add</button>
+    </div>`;
   });
 
   document.getElementById("places").innerHTML=html;
+  renderBucket();
 }
 
-<!-- 🔥 GLOBAL SEARCH FUNCTION -->
-async function searchGlobal(query){
-  if(!query) return;
-
-  const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`;
-
-  const res = await fetch(url);
-  const data = await res.json();
-
-  if(!data.length){
-    alert("Place not found ❌");
-    return;
+function addBucket(name){
+  if(!bucket.includes(name)){
+    bucket.push(name);
+    localStorage.setItem("bucket",JSON.stringify(bucket));
+    renderBucket();
   }
+}
 
-  const place = data[0];
-  const lat = parseFloat(place.lat);
-  const lon = parseFloat(place.lon);
-
-  document.getElementById("location").innerText =
-    place.display_name;
-
-  initMap(lat,lon);
-
-  L.marker([lat, lon]).addTo(map)
-    .bindPopup(place.display_name)
-    .openPopup();
-
-  fetchPlaces(lat, lon);
+function renderBucket(){
+  let html="";
+  bucket.forEach(b=>{
+    html+=`<div class="place">${b}</div>`;
+  });
+  document.getElementById("bucket").innerHTML=html;
 }
 </script>
 
