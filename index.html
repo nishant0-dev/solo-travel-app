@@ -3,76 +3,152 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Wanderer Pro</title>
+<title>Wanderer</title>
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 
 <style>
+:root{
+  --bg1:#0f2027; --bg2:#203a43; --bg3:#2c5364;
+  --card:rgba(255,255,255,0.08);
+  --accent:#00c6ff;
+}
+
+*{box-sizing:border-box}
 body{
-  margin:0;
-  font-family:sans-serif;
-  background:#0f2027;
-  color:white;
-  overflow-x:hidden;
+  margin:0; font-family:system-ui,Segoe UI,Roboto;
+  background:linear-gradient(to bottom,var(--bg1),var(--bg2),var(--bg3));
+  color:#fff;
 }
 
-.screen{
-  width:100%;
-  height:100vh;
-  position:absolute;
-  top:0;
-  left:0;
-  transition:0.5s;
-  padding:20px;
+/* Header + Banner */
+.header{
+  padding:16px 16px 0;
+}
+.logo{
+  display:flex; align-items:center; gap:10px;
+  font-weight:700; font-size:18px;
+}
+.logo span{
+  background:var(--accent);
+  padding:4px 8px; border-radius:8px; color:#000;
+}
+.banner{
+  height:120px; border-radius:16px; margin-top:12px;
+  background:
+    radial-gradient(circle at 20% 30%, #fff3 2px, transparent 3px),
+    radial-gradient(circle at 70% 20%, #fff3 2px, transparent 3px),
+    linear-gradient(#203a43,#2c5364);
+  position:relative; overflow:hidden;
+}
+.mountain{
+  position:absolute; bottom:0; width:0; height:0;
+  border-left:80px solid transparent;
+  border-right:80px solid transparent;
+  border-bottom:120px solid #1b3a4b;
+}
+.m1{ left:10%; }
+.m2{ left:40%; border-bottom-color:#17313f; }
+.m3{ left:70%; border-bottom-color:#1b3a4b; }
+
+/* Search */
+.searchBox{
+  margin:12px 16px;
+}
+input{
+  width:100%; padding:12px;
+  border-radius:12px; border:none;
+  font-size:15px;
 }
 
-#home{ background:#0f2027; }
-#placesScreen{ background:#203a43; left:100%; }
-
-button{
-  padding:10px;
-  margin:5px;
-  border:none;
-  border-radius:8px;
-  background:#00c6ff;
+/* Map */
+#map{
+  height:260px; margin:10px 16px; border-radius:16px;
 }
 
+/* Section */
+.section{
+  padding:0 16px 80px;
+}
+.title{
+  font-weight:600; margin:10px 0;
+}
+
+/* Card */
 .place{
-  background:rgba(255,255,255,0.1);
-  margin:10px;
-  padding:10px;
-  border-radius:10px;
+  background:var(--card);
+  padding:14px; border-radius:14px;
+  margin-bottom:10px;
+}
+.place b{ font-size:15px; }
+.meta{ font-size:12px; opacity:.7; margin:4px 0; }
+
+.actions{
+  display:flex; gap:8px; margin-top:6px;
+}
+button{
+  flex:1; padding:8px; border:none;
+  border-radius:10px; background:var(--accent);
+  color:#000; font-weight:600;
 }
 
-#map{ height:250px; margin:10px 0; }
+/* Bottom Nav */
+.nav{
+  position:fixed; bottom:0; left:0; right:0;
+  background:#0b1a22;
+  display:flex; justify-content:space-around;
+  padding:10px 0;
+}
+.nav button{
+  background:none; color:#fff;
+}
+.active{ color:var(--accent); }
+
+/* Hide screens */
+.hidden{ display:none; }
 </style>
 </head>
 
 <body>
 
-<!-- HOME SCREEN -->
-<div id="home" class="screen">
-  <h2>🌍 Wanderer</h2>
+<!-- HEADER -->
+<div class="header">
+  <div class="logo">
+    <span>W</span> Wanderer
+  </div>
 
-  <button onclick="getLocation()">Get Location</button>
-
-  <input placeholder="Search world..."
-  onkeypress="if(event.key==='Enter') searchGlobal(this.value)">
-
-  <button onclick="openPlaces()">Explore Nearby →</button>
-
-  <div id="map"></div>
+  <div class="banner">
+    <div class="mountain m1"></div>
+    <div class="mountain m2"></div>
+    <div class="mountain m3"></div>
+  </div>
 </div>
 
-<!-- PLACES SCREEN -->
-<div id="placesScreen" class="screen">
-  <button onclick="backHome()">⬅ Back</button>
+<!-- SEARCH -->
+<div class="searchBox">
+  <input placeholder="Search anywhere..."
+  onkeypress="if(event.key==='Enter') searchGlobal(this.value)">
+</div>
 
-  <h3>📍 Nearby Places</h3>
+<!-- MAP -->
+<div id="map"></div>
+
+<!-- EXPLORE -->
+<div id="explore" class="section">
+  <div class="title">Nearby Places</div>
   <div id="places"></div>
+</div>
 
-  <h3>🎯 Bucket List</h3>
+<!-- BUCKET -->
+<div id="bucketScreen" class="section hidden">
+  <div class="title">Your Bucket List</div>
   <div id="bucket"></div>
+</div>
+
+<!-- NAV -->
+<div class="nav">
+  <button class="active" onclick="showScreen('explore')">Explore</button>
+  <button onclick="showScreen('bucketScreen')">Bucket</button>
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -81,19 +157,8 @@ button{
 let map;
 let bucket = JSON.parse(localStorage.getItem("bucket")) || [];
 
-function openPlaces(){
-  document.getElementById("home").style.left="-100%";
-  document.getElementById("placesScreen").style.left="0";
-}
-
-function backHome(){
-  document.getElementById("home").style.left="0";
-  document.getElementById("placesScreen").style.left="100%";
-}
-
 function initMap(lat,lon){
   if(map) map.remove();
-
   map=L.map('map').setView([lat,lon],13);
 
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png')
@@ -102,21 +167,10 @@ function initMap(lat,lon){
   L.marker([lat,lon]).addTo(map);
 }
 
-function getLocation(){
-  navigator.geolocation.getCurrentPosition(pos=>{
-    const lat=pos.coords.latitude;
-    const lon=pos.coords.longitude;
-
-    initMap(lat,lon);
-    fetchPlaces(lat,lon);
-  });
-}
-
 async function searchGlobal(query){
   const url=`https://nominatim.openstreetmap.org/search?format=json&q=${query}`;
   const res=await fetch(url);
   const data=await res.json();
-
   if(!data.length) return;
 
   const lat=parseFloat(data[0].lat);
@@ -136,18 +190,27 @@ async function fetchPlaces(lat,lon){
   const data=await res.json();
 
   let html="";
-  data.elements.slice(0,10).forEach(p=>{
+  data.elements.slice(0,8).forEach(p=>{
     const name=p.tags?.name || "Place";
 
     html+=`
     <div class="place">
-      ${name}
-      <button onclick="addBucket('${name}')">Add</button>
+      <b>${name}</b>
+      <div class="meta">Lat: ${p.lat.toFixed(3)} | Lon: ${p.lon.toFixed(3)}</div>
+      <div class="actions">
+        <button onclick="addBucket('${name}')">⭐ Save</button>
+        <button onclick="focusMap(${p.lat},${p.lon})">📍 View</button>
+      </div>
     </div>`;
   });
 
   document.getElementById("places").innerHTML=html;
   renderBucket();
+}
+
+function focusMap(lat,lon){
+  map.setView([lat,lon],15);
+  L.marker([lat,lon]).addTo(map);
 }
 
 function addBucket(name){
@@ -164,6 +227,13 @@ function renderBucket(){
     html+=`<div class="place">${b}</div>`;
   });
   document.getElementById("bucket").innerHTML=html;
+}
+
+function showScreen(id){
+  document.getElementById("explore").classList.add("hidden");
+  document.getElementById("bucketScreen").classList.add("hidden");
+
+  document.getElementById(id).classList.remove("hidden");
 }
 </script>
 
