@@ -34,12 +34,14 @@ body {
 /* APP */
 #app { display:none; }
 
+/* HEADER */
 .header {
   text-align:center;
   padding:15px;
   font-size:20px;
 }
 
+/* SEARCH */
 .search input {
   width:90%;
   margin:10px;
@@ -48,6 +50,7 @@ body {
   border:none;
 }
 
+/* BUTTON */
 button {
   background:#3b82f6;
   color:white;
@@ -78,6 +81,7 @@ button:hover {
   padding:10px;
 }
 
+/* CARD */
 .card {
   background:#1e293b;
   padding:10px;
@@ -126,18 +130,18 @@ button:hover {
 <div class="header">Wanderer Pro</div>
 
 <div class="search">
-  <input placeholder="Search..."
+  <input placeholder="Search place..."
   onkeypress="if(event.key==='Enter') searchGlobal(this.value)">
 </div>
 
 <div style="text-align:center">
-  <button onclick="getLocation()">📍 Location</button>
+  <button onclick="getLocation()">📍 Get Location</button>
 </div>
 
 <div id="map"></div>
 
 <div id="explore">
-  <h3 style="padding-left:10px;">Nearby</h3>
+  <h3 style="padding-left:10px;">Nearby Places</h3>
   <div id="places"></div>
 </div>
 
@@ -176,20 +180,23 @@ function login(){
   if(!user) return alert("Enter name");
 
   localStorage.setItem("user", user);
-  document.getElementById("loginPage").style.display="none";
-  document.getElementById("app").style.display="block";
-  initApp();
+  showApp();
 }
 
 /* AUTO LOGIN */
 window.onload = ()=>{
   if(localStorage.getItem("user")){
-    document.getElementById("loginPage").style.display="none";
-    document.getElementById("app").style.display="block";
-    initApp();
+    showApp();
   }
 };
 
+function showApp(){
+  document.getElementById("loginPage").style.display="none";
+  document.getElementById("app").style.display="block";
+  initApp();
+}
+
+/* INIT */
 function initApp(){
   updatePoints();
   renderBucket();
@@ -200,7 +207,6 @@ function initApp(){
   navigator.geolocation.getCurrentPosition(pos=>{
     userLat = pos.coords.latitude;
     userLon = pos.coords.longitude;
-
     initMap(userLat,userLon);
     fetchPlaces(userLat,userLon);
   },()=>{
@@ -211,26 +217,32 @@ function initApp(){
 /* MAP */
 function initMap(lat,lon){
   if(map) map.remove();
-
   map = L.map('map').setView([lat,lon],13);
 
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-
   L.marker([lat,lon]).addTo(map).bindPopup("You").openPopup();
 }
 
-/* SEARCH */
+/* SEARCH (FIXED) */
 async function searchGlobal(q){
-  const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${q}`);
-  const data = await res.json();
+  try{
+    const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${q}`);
+    const data = await res.json();
 
-  if(!data.length) return alert("Not found");
+    if(!data.length){
+      document.getElementById("places").innerHTML="Not found ❌";
+      return;
+    }
 
-  userLat = data[0].lat;
-  userLon = data[0].lon;
+    userLat = parseFloat(data[0].lat);
+    userLon = parseFloat(data[0].lon);
 
-  initMap(userLat,userLon);
-  fetchPlaces(userLat,userLon);
+    initMap(userLat,userLon);
+    fetchPlaces(userLat,userLon);
+
+  }catch{
+    document.getElementById("places").innerHTML="Search error ⚠️";
+  }
 }
 
 /* DISTANCE */
@@ -245,9 +257,9 @@ function getDistance(a,b,c,d){
   return (R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x))).toFixed(2);
 }
 
-/* FETCH */
+/* FETCH (FIXED) */
 async function fetchPlaces(lat,lon){
-  document.getElementById("places").innerHTML="Loading...";
+  document.getElementById("places").innerHTML="Loading... ⏳";
 
   try{
     const query=`[out:json];node["amenity"](around:2000,${lat},${lon});out;`;
@@ -255,8 +267,8 @@ async function fetchPlaces(lat,lon){
     const res=await fetch("https://overpass-api.de/api/interpreter?data="+encodeURIComponent(query));
     const data=await res.json();
 
-    if(!data.elements.length){
-      document.getElementById("places").innerHTML="No places";
+    if(!data.elements || data.elements.length===0){
+      document.getElementById("places").innerHTML="No places 😕";
       return;
     }
 
@@ -269,8 +281,8 @@ async function fetchPlaces(lat,lon){
       html+=`
       <div class="card">
         <img src="https://source.unsplash.com/400x200/?${name}">
-        <b>${name}</b>
-        <small>${dist} km</small><br>
+        <b>${name}</b><br>
+        <small>📍 ${dist} km</small><br>
         <button onclick="focusMap(${p.lat},${p.lon})">View</button>
         <button onclick="addBucket('${name}')">Save</button>
       </div>`;
@@ -279,7 +291,7 @@ async function fetchPlaces(lat,lon){
     document.getElementById("places").innerHTML=html;
 
   }catch{
-    document.getElementById("places").innerHTML="Error loading";
+    document.getElementById("places").innerHTML="API Error ⚠️";
   }
 }
 
