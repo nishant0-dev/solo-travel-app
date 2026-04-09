@@ -232,15 +232,42 @@ async function fetchPlaces(lat, lon){
   node["amenity"](around:2000, ${lat}, ${lon});
   out;`;
 
-  const res = await fetch("https://overpass-api.de/api/interpreter?data="+encodeURIComponent(query));
-  const data = await res.json();
+  try {
+    const res = await fetch(
+      "https://overpass-api.de/api/interpreter?data=" + encodeURIComponent(query)
+    );
 
-  if(!data.elements.length){
+    const data = await res.json();
+
+    if (!data.elements || data.elements.length === 0) {
+      document.getElementById("places").innerHTML =
+        "<div class='card'>No places found 😕</div>";
+      return;
+    }
+
+    let html = "";
+
+    data.elements.slice(0,8).forEach(p=>{
+      const name = p.tags?.name || "Place";
+      const distance = getDistance(userLat, userLon, p.lat, p.lon);
+
+      html += `
+      <div class="card">
+        <img src="https://source.unsplash.com/400x200/?travel,${name}">
+        <b>${name}</b><br>
+        <small>📍 ${distance} km</small><br><br>
+        <button onclick="focusMap(${p.lat},${p.lon})">View</button>
+        <button onclick="addBucket('${name}')">Save</button>
+      </div>`;
+    });
+
+    document.getElementById("places").innerHTML = html;
+
+  } catch (error) {
     document.getElementById("places").innerHTML =
-      "<div class='card'>No places found 😕</div>";
-    return;
+      "<div class='card'>API Error ⚠️ Try again</div>";
   }
-
+}
   let html = "";
 
   data.elements.slice(0,8).forEach(p=>{
