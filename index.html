@@ -9,10 +9,10 @@
 
 <style>
 body {
-  margin: 0;
-  font-family: 'Poppins', sans-serif;
-  background: linear-gradient(135deg,#0f172a,#1e293b);
-  color: white;
+  margin:0;
+  font-family:sans-serif;
+  background:#0f172a;
+  color:white;
 }
 
 /* LOGIN */
@@ -24,33 +24,19 @@ body {
   align-items:center;
 }
 
-#loginPage input {
-  padding:12px;
-  border-radius:10px;
-  border:none;
-  margin:10px;
-}
-
 /* APP */
 #app { display:none; }
 
-/* HEADER */
-.header {
-  text-align:center;
-  padding:15px;
-  font-size:20px;
-}
+.header { text-align:center; padding:15px; }
 
-/* SEARCH */
 .search input {
   width:90%;
-  margin:10px;
   padding:12px;
+  margin:10px;
   border-radius:10px;
   border:none;
 }
 
-/* BUTTON */
 button {
   background:#3b82f6;
   color:white;
@@ -58,22 +44,14 @@ button {
   padding:8px;
   border-radius:10px;
   margin:5px;
-  cursor:pointer;
-  transition:0.3s;
 }
 
-button:hover {
-  transform:scale(1.05);
-}
-
-/* MAP */
 #map {
   height:250px;
   margin:10px;
-  border-radius:12px;
+  border-radius:10px;
 }
 
-/* GRID */
 #places {
   display:grid;
   grid-template-columns:1fr 1fr;
@@ -81,26 +59,12 @@ button:hover {
   padding:10px;
 }
 
-/* CARD */
 .card {
   background:#1e293b;
   padding:10px;
-  border-radius:12px;
-  transition:0.3s;
-}
-
-.card:hover {
-  transform:scale(1.03);
-}
-
-.card img {
-  width:100%;
-  height:100px;
-  object-fit:cover;
   border-radius:10px;
 }
 
-/* NAV */
 .nav {
   position:fixed;
   bottom:0;
@@ -120,8 +84,7 @@ button:hover {
 <!-- LOGIN -->
 <div id="loginPage">
   <h2>Login 🌍</h2>
-  <input id="username" placeholder="Enter name">
-  <button onclick="login()">Login</button>
+  <button onclick="googleLogin()">Login with Google</button>
 </div>
 
 <!-- APP -->
@@ -130,88 +93,66 @@ button:hover {
 <div class="header">Wanderer Pro</div>
 
 <div class="search">
-  <input placeholder="Search place..."
+  <input placeholder="Search..."
   onkeypress="if(event.key==='Enter') searchGlobal(this.value)">
 </div>
 
 <div style="text-align:center">
-  <button onclick="getLocation()">📍 Get Location</button>
+  <button onclick="getLocation()">📍 Location</button>
+  <button onclick="logout()">Logout</button>
 </div>
 
 <div id="map"></div>
 
 <div id="explore">
-  <h3 style="padding-left:10px;">Nearby Places</h3>
+  <h3>Nearby</h3>
   <div id="places"></div>
-</div>
-
-<div id="bucketScreen" class="hidden">
-  <h3>Bucket</h3>
-  <div id="bucket"></div>
-</div>
-
-<div id="taskScreen" class="hidden">
-  <h3>Tasks</h3>
-  <div id="tasks"></div>
-  ⭐ <span id="points">0</span>
-</div>
-
-<div class="nav">
-  <button onclick="showTab('explore')">Explore</button>
-  <button onclick="showTab('bucketScreen')">Bucket</button>
-  <button onclick="showTab('taskScreen')">Tasks</button>
 </div>
 
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
+<!-- ✅ FIREBASE (CORRECT WAY) -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut }
+from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDlu9Xw8_Nb9sN-TCyMsjORViHQD9MQnRg",
+  authDomain: "wanderer-6b780.firebaseapp.com",
+  projectId: "wanderer-6b780"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+
+/* LOGIN */
+window.googleLogin = function(){
+  const provider = new GoogleAuthProvider();
+
+  signInWithPopup(auth, provider)
+    .then(() => showApp())
+    .catch(() => alert("Login failed"));
+};
+
+/* AUTO LOGIN */
+onAuthStateChanged(auth, user => {
+  if(user) showApp();
+});
+
+/* LOGOUT */
+window.logout = function(){
+  signOut(auth).then(()=>location.reload());
+};
+</script>
+
+<!-- APP LOGIC -->
 <script>
-
-  script type="module">
-  // Import the functions you need from the SDKs you need
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
-  import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-analytics.js";
-  // TODO: Add SDKs for Firebase products that you want to use
-  // https://firebase.google.com/docs/web/setup#available-libraries
-
-  // Your web app's Firebase configuration
-  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
-  const firebaseConfig = {
-    apiKey: "AIzaSyDlu9Xw8_Nb9sN-TCyMsjORViHQD9MQnRg",
-    authDomain: "wanderer-6b780.firebaseapp.com",
-    projectId: "wanderer-6b780",
-    storageBucket: "wanderer-6b780.firebasestorage.app",
-    messagingSenderId: "333975351570",
-    appId: "1:333975351570:web:941fbfde1b8d8a9fe303cb",
-    measurementId: "G-CN3F0ZWEB1"
-  };
-
-  // Initialize Firebase
-  const app = initializeApp(firebaseConfig);
-  const analytics = getAnalytics(app);
 let map;
 let userLat = 28.6139;
 let userLon = 77.2090;
-
-let bucket = JSON.parse(localStorage.getItem("bucket")) || [];
-let points = parseInt(localStorage.getItem("points")) || 0;
-
-/* LOGIN */
-function login(){
-  const user = document.getElementById("username").value;
-  if(!user) return alert("Enter name");
-
-  localStorage.setItem("user", user);
-  showApp();
-}
-
-/* AUTO LOGIN */
-window.onload = ()=>{
-  if(localStorage.getItem("user")){
-    showApp();
-  }
-};
 
 function showApp(){
   document.getElementById("loginPage").style.display="none";
@@ -219,156 +160,63 @@ function showApp(){
   initApp();
 }
 
-/* INIT */
 function initApp(){
-  updatePoints();
-  renderBucket();
-  renderTasks();
-
   initMap(userLat,userLon);
-
   navigator.geolocation.getCurrentPosition(pos=>{
     userLat = pos.coords.latitude;
     userLon = pos.coords.longitude;
     initMap(userLat,userLon);
     fetchPlaces(userLat,userLon);
-  },()=>{
-    fetchPlaces(userLat,userLon);
   });
 }
 
-/* MAP */
 function initMap(lat,lon){
   if(map) map.remove();
   map = L.map('map').setView([lat,lon],13);
 
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-  L.marker([lat,lon]).addTo(map).bindPopup("You").openPopup();
 }
 
-/* SEARCH (FIXED) */
 async function searchGlobal(q){
-  try{
-    const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${q}`);
-    const data = await res.json();
+  const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${q}`);
+  const data = await res.json();
 
-    if(!data.length){
-      document.getElementById("places").innerHTML="Not found ❌";
-      return;
-    }
+  if(!data.length) return alert("Not found");
 
-    userLat = parseFloat(data[0].lat);
-    userLon = parseFloat(data[0].lon);
+  userLat = parseFloat(data[0].lat);
+  userLon = parseFloat(data[0].lon);
 
-    initMap(userLat,userLon);
-    fetchPlaces(userLat,userLon);
-
-  }catch{
-    document.getElementById("places").innerHTML="Search error ⚠️";
-  }
+  initMap(userLat,userLon);
+  fetchPlaces(userLat,userLon);
 }
 
-/* DISTANCE */
-function getDistance(a,b,c,d){
-  const R=6371;
-  const dLat=(c-a)*Math.PI/180;
-  const dLon=(d-b)*Math.PI/180;
-  const x=Math.sin(dLat/2)**2+
-  Math.cos(a*Math.PI/180)*Math.cos(c*Math.PI/180)*
-  Math.sin(dLon/2)**2;
-
-  return (R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x))).toFixed(2);
-}
-
-/* FETCH (FIXED) */
 async function fetchPlaces(lat,lon){
-  document.getElementById("places").innerHTML="Loading... ⏳";
+  document.getElementById("places").innerHTML="Loading...";
 
   try{
     const query=`[out:json];node["amenity"](around:2000,${lat},${lon});out;`;
-
     const res=await fetch("https://overpass-api.de/api/interpreter?data="+encodeURIComponent(query));
     const data=await res.json();
 
-    if(!data.elements || data.elements.length===0){
-      document.getElementById("places").innerHTML="No places 😕";
-      return;
-    }
-
     let html="";
-
-    data.elements.slice(0,8).forEach(p=>{
-      const name=p.tags?.name||"Place";
-      const dist=getDistance(userLat,userLon,p.lat,p.lon);
-
-      html+=`
-      <div class="card">
-        <img src="https://source.unsplash.com/400x200/?${name}">
-        <b>${name}</b><br>
-        <small>📍 ${dist} km</small><br>
-        <button onclick="focusMap(${p.lat},${p.lon})">View</button>
-        <button onclick="addBucket('${name}')">Save</button>
-      </div>`;
+    data.elements.slice(0,6).forEach(p=>{
+      html+=`<div class="card">${p.tags?.name||"Place"}</div>`;
     });
 
     document.getElementById("places").innerHTML=html;
 
   }catch{
-    document.getElementById("places").innerHTML="API Error ⚠️";
+    document.getElementById("places").innerHTML="Error";
   }
 }
 
-/* MAP FOCUS */
-function focusMap(lat,lon){
-  map.setView([lat,lon],15);
-}
-
-/* BUCKET */
-function addBucket(n){
-  if(!bucket.includes(n)){
-    bucket.push(n);
-    localStorage.setItem("bucket",JSON.stringify(bucket));
-    renderBucket();
-  }
-}
-
-function renderBucket(){
-  let html="";
-  bucket.forEach((b,i)=>{
-    html+=`<div class="card">${b}
-    <button onclick="removeBucket(${i})">❌</button></div>`;
+function getLocation(){
+  navigator.geolocation.getCurrentPosition(pos=>{
+    userLat = pos.coords.latitude;
+    userLon = pos.coords.longitude;
+    initMap(userLat,userLon);
+    fetchPlaces(userLat,userLon);
   });
-  document.getElementById("bucket").innerHTML=html;
-}
-
-function removeBucket(i){
-  bucket.splice(i,1);
-  localStorage.setItem("bucket",JSON.stringify(bucket));
-  renderBucket();
-}
-
-/* TASK */
-function renderTasks(){
-  document.getElementById("tasks").innerHTML=
-  `<div class="card">Explore<button onclick="completeTask()">Done</button></div>`;
-}
-
-function completeTask(){
-  points+=10;
-  localStorage.setItem("points",points);
-  updatePoints();
-}
-
-function updatePoints(){
-  document.getElementById("points").innerText=points;
-}
-
-/* TAB */
-function showTab(t){
-  document.getElementById("explore").classList.add("hidden");
-  document.getElementById("bucketScreen").classList.add("hidden");
-  document.getElementById("taskScreen").classList.add("hidden");
-  document.getElementById(t).classList.remove("hidden");
 }
 </script>
 
