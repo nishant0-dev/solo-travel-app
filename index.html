@@ -28,8 +28,9 @@ body{
 .header{
   text-align:center;
   padding:15px;
-  font-size:20px;
+  font-size:22px;
   font-weight:bold;
+  letter-spacing:1px;
 }
 
 /* SEARCH */
@@ -54,13 +55,13 @@ button{
   cursor:pointer;
   transition:0.2s;
 }
-button:hover{transform:scale(1.05)}
+button:hover{transform:scale(1.08)}
 
 /* MAP */
 #map{
   height:250px;
   margin:10px;
-  border-radius:12px;
+  border-radius:14px;
 }
 
 /* GRID */
@@ -69,18 +70,19 @@ button:hover{transform:scale(1.05)}
   grid-template-columns:1fr 1fr;
   gap:12px;
   padding:10px;
+  animation:fadeIn 0.5s ease;
 }
 
-/* CARD (ZOMATO STYLE) */
+/* CARD */
 .card{
   background:#1e293b;
   border-radius:14px;
   overflow:hidden;
-  box-shadow:0 4px 15px rgba(0,0,0,0.4);
+  box-shadow:0 4px 20px rgba(0,0,0,0.5);
   transition:0.3s;
 }
 .card:hover{
-  transform:translateY(-5px);
+  transform:translateY(-6px) scale(1.02);
 }
 
 .card img{
@@ -98,13 +100,6 @@ button:hover{transform:scale(1.05)}
   font-size:15px;
 }
 
-.card-actions{
-  display:flex;
-  flex-wrap:wrap;
-  justify-content:space-between;
-  margin-top:8px;
-}
-
 /* NAV */
 .nav{
   position:fixed;
@@ -117,6 +112,12 @@ button:hover{transform:scale(1.05)}
 }
 
 .hidden{display:none}
+
+/* ANIMATION */
+@keyframes fadeIn{
+  from{opacity:0; transform:translateY(10px)}
+  to{opacity:1; transform:translateY(0)}
+}
 </style>
 </head>
 
@@ -128,7 +129,6 @@ button:hover{transform:scale(1.05)}
 <button onclick="googleLogin()">Login with Google</button>
 </div>
 
-<!-- APP -->
 <div id="app">
 
 <div class="header">Wanderer Pro</div>
@@ -182,16 +182,15 @@ function initMap(){
   fetchPlaces();
 }
 
-/* FIXED FETCH */
+/* FIXED API */
 async function fetchPlaces(){
   const el = document.getElementById("places");
-  el.innerHTML="Loading... ⏳";
+  el.innerHTML="Loading...";
 
   try{
-    const res = await fetch(`https://api.geoapify.com/v2/places?categories=tourism,restaurant,cafe,leisure&filter=circle:${userLon},${userLat},3000&limit=10&apiKey=${API_KEY}`);
+    const url = `https://api.geoapify.com/v2/places?categories=tourism.sights,catering.restaurant,catering.cafe,entertainment&filter=circle:${userLon},${userLat},3000&limit=10&apiKey=${API_KEY}`;
 
-    if(!res.ok) throw new Error("API error");
-
+    const res = await fetch(url);
     const data = await res.json();
 
     if(!data.features || data.features.length===0){
@@ -211,12 +210,9 @@ async function fetchPlaces(){
         <img src="https://source.unsplash.com/400x200/?${name}">
         <div class="card-content">
           <div class="card-title">${name}</div>
-
-          <div class="card-actions">
-            <button onclick="direction(${lat},${lon})">🧭</button>
-            <button onclick="addBucket('${name}')">💾</button>
-            <button onclick="visit('${name}')">⭐</button>
-          </div>
+          <button onclick="direction(${lat},${lon})">🧭</button>
+          <button onclick="addBucket('${name}')">💾</button>
+          <button onclick="visit('${name}')">⭐</button>
         </div>
       </div>`;
     });
@@ -225,18 +221,18 @@ async function fetchPlaces(){
 
   }catch(err){
     console.error(err);
-    el.innerHTML="⚠️ Failed to load places";
+    el.innerHTML="❌ Failed to load places";
   }
 }
 
-/* SEARCH FIX */
+/* SEARCH */
 async function searchPlace(q){
   try{
     const res = await fetch(`https://api.geoapify.com/v1/geocode/search?text=${q}&apiKey=${API_KEY}`);
     const data = await res.json();
 
     if(!data.features.length){
-      alert("Place not found ❌");
+      alert("Place not found");
       return;
     }
 
@@ -246,27 +242,22 @@ async function searchPlace(q){
     initMap();
 
   }catch{
-    alert("Search error ⚠️");
+    alert("Search error");
   }
 }
 
-/* LOCATION */
 function getLocation(){
   navigator.geolocation.getCurrentPosition(pos=>{
-    userLat = pos.coords.latitude;
-    userLon = pos.coords.longitude;
+    userLat=pos.coords.latitude;
+    userLon=pos.coords.longitude;
     initMap();
-  },()=>{
-    alert("Location permission denied");
   });
 }
 
-/* DIRECTION */
 function direction(lat,lon){
   window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}`);
 }
 
-/* BUCKET */
 function addBucket(name){
   if(!bucket.includes(name)){
     bucket.push(name);
@@ -277,24 +268,22 @@ function addBucket(name){
 
 function renderBucket(){
   document.getElementById("bucket").innerHTML =
-    bucket.map(b=>`<div class="card"><div class="card-content">${b}</div></div>`).join("");
+    bucket.map(b=>`<div class="card">${b}</div>`).join("");
 }
 
-/* VISIT */
 function visit(name){
   points+=10;
   localStorage.setItem("points",points);
   alert("🎉 +10 points");
 }
 
-/* TAB */
 function showTab(tab){
   document.getElementById("places").classList.add("hidden");
   document.getElementById("bucketScreen").classList.add("hidden");
   document.getElementById(tab).classList.remove("hidden");
 }
 
-/* LOGIN (UNCHANGED) */
+/* LOGIN SAME */
 function googleLogin(){
   document.getElementById("loginPage").style.display="none";
   document.getElementById("app").style.display="block";
@@ -303,36 +292,6 @@ function googleLogin(){
 
 function logout(){
   location.reload();
-}
-  async function fetchPlaces(){
-  const el = document.getElementById("places");
-  el.innerHTML="Loading...";
-
-  try{
-    const url = `https://api.geoapify.com/v2/places?categories=tourism,restaurant,cafe,leisure&filter=circle:${userLon},${userLat},3000&limit=10&apiKey=${API_KEY}`;
-
-    const res = await fetch(url);
-
-    const text = await res.text();
-    console.log(text); // 👈 IMPORTANT
-
-    const data = JSON.parse(text);
-
-    if(!data.features){
-      throw new Error("Invalid data");
-    }
-
-    let html="";
-    data.features.forEach(p=>{
-      html += `<div class="card">${p.properties.name || "Place"}</div>`;
-    });
-
-    el.innerHTML = html;
-
-  }catch(err){
-    console.error(err);
-    el.innerHTML="❌ API Error (check console)";
-  }
 }
 </script>
 
