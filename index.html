@@ -304,6 +304,36 @@ function googleLogin(){
 function logout(){
   location.reload();
 }
+  async function fetchPlaces(){
+  const el = document.getElementById("places");
+  el.innerHTML="Loading...";
+
+  try{
+    const url = `https://api.geoapify.com/v2/places?categories=tourism,restaurant,cafe,leisure&filter=circle:${userLon},${userLat},3000&limit=10&apiKey=${API_KEY}`;
+
+    const res = await fetch(url);
+
+    const text = await res.text();
+    console.log(text); // 👈 IMPORTANT
+
+    const data = JSON.parse(text);
+
+    if(!data.features){
+      throw new Error("Invalid data");
+    }
+
+    let html="";
+    data.features.forEach(p=>{
+      html += `<div class="card">${p.properties.name || "Place"}</div>`;
+    });
+
+    el.innerHTML = html;
+
+  }catch(err){
+    console.error(err);
+    el.innerHTML="❌ API Error (check console)";
+  }
+}
 </script>
 
 </body>
