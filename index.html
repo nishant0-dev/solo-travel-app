@@ -1,81 +1,21 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Wanderer Pro</title>
 
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-
 <style>
-body {
-  margin:0;
-  font-family:sans-serif;
-  background:#0f172a;
-  color:white;
-}
-
-/* LOGIN */
-#loginPage {
-  height:100vh;
-  display:flex;
-  flex-direction:column;
-  justify-content:center;
-  align-items:center;
-}
-
-/* APP */
-#app { display:none; }
-
-.header { text-align:center; padding:15px; }
-
-.search input {
-  width:90%;
-  padding:12px;
-  margin:10px;
-  border-radius:10px;
-  border:none;
-}
-
-button {
-  background:#3b82f6;
-  color:white;
-  border:none;
-  padding:8px;
-  border-radius:10px;
-  margin:5px;
-}
-
-#map {
-  height:250px;
-  margin:10px;
-  border-radius:10px;
-}
-
-#places {
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:10px;
-  padding:10px;
-}
-
-.card {
-  background:#1e293b;
-  padding:10px;
-  border-radius:10px;
-}
-
-.nav {
-  position:fixed;
-  bottom:0;
-  width:100%;
-  display:flex;
-  justify-content:space-around;
-  background:#020617;
-  padding:10px;
-}
-
-.hidden { display:none; }
+body{margin:0;background:#0f172a;color:white;font-family:sans-serif}
+#loginPage{height:100vh;display:flex;justify-content:center;align-items:center;flex-direction:column}
+#app{display:none}
+input{padding:10px;border-radius:10px;border:none;margin:10px;width:90%}
+button{padding:8px;border:none;border-radius:10px;background:#3b82f6;color:white;margin:5px}
+#map{height:250px;margin:10px;border-radius:10px}
+#places{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:10px}
+.card{background:#1e293b;padding:10px;border-radius:10px}
+img{width:100%;height:100px;object-fit:cover;border-radius:10px}
+.nav{position:fixed;bottom:0;width:100%;display:flex;justify-content:space-around;background:#020617;padding:10px}
+.hidden{display:none}
 </style>
 </head>
 
@@ -83,142 +23,159 @@ button {
 
 <!-- LOGIN -->
 <div id="loginPage">
-  <h2>Login 🌍</h2>
-  <button onclick="googleLogin()">Login with Google</button>
+<h2>Login 🌍</h2>
+<button onclick="googleLogin()">Login with Google</button>
 </div>
 
 <!-- APP -->
 <div id="app">
 
-<div class="header">Wanderer Pro</div>
+<h2 style="text-align:center">Wanderer Pro</h2>
 
-<div class="search">
-  <input placeholder="Search..."
-  onkeypress="if(event.key==='Enter') searchGlobal(this.value)">
-</div>
+<input placeholder="Search place..."
+onkeypress="if(event.key==='Enter') searchPlace(this.value)">
 
 <div style="text-align:center">
-  <button onclick="getLocation()">📍 Location</button>
-  <button onclick="logout()">Logout</button>
+<button onclick="getLocation()">📍 Location</button>
+<button onclick="logout()">Logout</button>
 </div>
 
 <div id="map"></div>
 
-<div id="explore">
-  <h3>Nearby</h3>
-  <div id="places"></div>
+<h3 style="padding-left:10px;">Nearby</h3>
+<div id="places"></div>
+
+<div id="bucketScreen" class="hidden">
+<h3>Bucket</h3>
+<div id="bucket"></div>
+</div>
+
+<div class="nav">
+<button onclick="showTab('places')">Explore</button>
+<button onclick="showTab('bucketScreen')">Bucket</button>
 </div>
 
 </div>
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
-<!-- ✅ FIREBASE (CORRECT WAY) -->
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut }
-from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyDlu9Xw8_Nb9sN-TCyMsjORViHQD9MQnRg",
-  authDomain: "wanderer-6b780.firebaseapp.com",
-  projectId: "wanderer-6b780"
-};
-
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-
-/* LOGIN */
-window.googleLogin = function(){
-  const provider = new GoogleAuthProvider();
-
-  signInWithPopup(auth, provider)
-    .then(() => showApp())
-    .catch(() => alert("Login failed"));
-};
-
-/* AUTO LOGIN */
-onAuthStateChanged(auth, user => {
-  if(user) showApp();
-});
-
-/* LOGOUT */
-window.logout = function(){
-  signOut(auth).then(()=>location.reload());
-};
-</script>
-
-<!-- APP LOGIC -->
+<!-- GOOGLE MAP -->
 <script>
-let map;
-let userLat = 28.6139;
-let userLon = 77.2090;
+const GOOGLE_API_KEY = "PASTE_YOUR_KEY_HERE";
 
-function showApp(){
-  document.getElementById("loginPage").style.display="none";
-  document.getElementById("app").style.display="block";
-  initApp();
+let map, service;
+let userLat=28.61,userLon=77.20;
+let bucket = JSON.parse(localStorage.getItem("bucket"))||[];
+let points = parseInt(localStorage.getItem("points"))||0;
+
+function initMap(){
+  map = new google.maps.Map(document.getElementById("map"),{
+    center:{lat:userLat,lng:userLon},
+    zoom:14
+  });
+
+  service = new google.maps.places.PlacesService(map);
+
+  loadPlaces();
 }
 
-function initApp(){
-  initMap(userLat,userLon);
-  navigator.geolocation.getCurrentPosition(pos=>{
-    userLat = pos.coords.latitude;
-    userLon = pos.coords.longitude;
-    initMap(userLat,userLon);
-    fetchPlaces(userLat,userLon);
+function loadPlaces(){
+  const request = {
+    location: new google.maps.LatLng(userLat,userLon),
+    radius:2000,
+    type:['tourist_attraction','restaurant','cafe','park']
+  };
+
+  service.nearbySearch(request,(results,status)=>{
+    if(status !== google.maps.places.PlacesServiceStatus.OK){
+      document.getElementById("places").innerHTML="No places";
+      return;
+    }
+
+    let html="";
+    results.slice(0,8).forEach(p=>{
+      const img = p.photos ? p.photos[0].getUrl() : "";
+      const rating = p.rating || "N/A";
+
+      html += `
+      <div class="card">
+        <img src="${img}">
+        <b>${p.name}</b><br>
+        ⭐ ${rating}<br>
+        <button onclick="direction(${p.geometry.location.lat()},${p.geometry.location.lng()})">Direction</button>
+        <button onclick="addBucket('${p.name}')">Save</button>
+        <button onclick="visit('${p.name}')">Visit</button>
+      </div>`;
+    });
+
+    document.getElementById("places").innerHTML = html;
   });
 }
 
-function initMap(lat,lon){
-  if(map) map.remove();
-  map = L.map('map').setView([lat,lon],13);
-
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-}
-
-async function searchGlobal(q){
-  const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${q}`);
-  const data = await res.json();
-
-  if(!data.length) return alert("Not found");
-
-  userLat = parseFloat(data[0].lat);
-  userLon = parseFloat(data[0].lon);
-
-  initMap(userLat,userLon);
-  fetchPlaces(userLat,userLon);
-}
-
-async function fetchPlaces(lat,lon){
-  document.getElementById("places").innerHTML="Loading...";
-
-  try{
-    const query=`[out:json];node["amenity"](around:2000,${lat},${lon});out;`;
-    const res=await fetch("https://overpass-api.de/api/interpreter?data="+encodeURIComponent(query));
-    const data=await res.json();
-
-    let html="";
-    data.elements.slice(0,6).forEach(p=>{
-      html+=`<div class="card">${p.tags?.name||"Place"}</div>`;
-    });
-
-    document.getElementById("places").innerHTML=html;
-
-  }catch{
-    document.getElementById("places").innerHTML="Error";
-  }
+function direction(lat,lon){
+  window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}`);
 }
 
 function getLocation(){
   navigator.geolocation.getCurrentPosition(pos=>{
     userLat = pos.coords.latitude;
     userLon = pos.coords.longitude;
-    initMap(userLat,userLon);
-    fetchPlaces(userLat,userLon);
+    initMap();
   });
 }
+
+function searchPlace(q){
+  const geocoder = new google.maps.Geocoder();
+  geocoder.geocode({address:q},(res)=>{
+    userLat = res[0].geometry.location.lat();
+    userLon = res[0].geometry.location.lng();
+    initMap();
+  });
+}
+
+/* BUCKET */
+function addBucket(name){
+  if(!bucket.includes(name)){
+    bucket.push(name);
+    localStorage.setItem("bucket",JSON.stringify(bucket));
+    renderBucket();
+  }
+}
+
+function renderBucket(){
+  let html="";
+  bucket.forEach(b=>{
+    html += `<div class="card">${b}</div>`;
+  });
+  document.getElementById("bucket").innerHTML=html;
+}
+
+/* VISIT REWARD */
+function visit(name){
+  points+=10;
+  localStorage.setItem("points",points);
+  alert("🎉 +10 points for visiting "+name);
+}
+
+/* TAB */
+function showTab(tab){
+  document.getElementById("places").classList.add("hidden");
+  document.getElementById("bucketScreen").classList.add("hidden");
+  document.getElementById(tab).classList.remove("hidden");
+}
+
+/* LOGIN (SIMPLE) */
+function googleLogin(){
+  document.getElementById("loginPage").style.display="none";
+  document.getElementById("app").style.display="block";
+  initMap();
+}
+
+function logout(){
+  location.reload();
+}
 </script>
+
+<!-- GOOGLE SCRIPT -->
+<script src="https://maps.googleapis.com/maps/api/js?key=PASTE_YOUR_KEY_HERE&libraries=places&callback=initMap" async defer></script>
 
 </body>
 </html>
