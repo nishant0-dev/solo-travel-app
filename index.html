@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <title>Wanderer Pro</title>
 
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+
 <style>
 body{margin:0;background:#0f172a;color:white;font-family:sans-serif}
 #loginPage{height:100vh;display:flex;justify-content:center;align-items:center;flex-direction:column}
@@ -23,8 +25,8 @@ img{width:100%;height:100px;object-fit:cover;border-radius:10px}
 
 <!-- LOGIN -->
 <div id="loginPage">
-<h2>Login 🌍</h2>
-<button onclick="googleLogin()">Login with Google</button>
+  <h2>Login 🌍</h2>
+  <button onclick="googleLogin()">Login with Google</button>
 </div>
 
 <!-- APP -->
@@ -32,8 +34,7 @@ img{width:100%;height:100px;object-fit:cover;border-radius:10px}
 
 <h2 style="text-align:center">Wanderer Pro</h2>
 
-<input placeholder="Search place..."
-onkeypress="if(event.key==='Enter') searchPlace(this.value)">
+<input id="searchInput" placeholder="Search place...">
 
 <div style="text-align:center">
 <button onclick="getLocation()">📍 Location</button>
@@ -41,8 +42,6 @@ onkeypress="if(event.key==='Enter') searchPlace(this.value)">
 </div>
 
 <div id="map"></div>
-
-<h3 style="padding-left:10px;">Nearby</h3>
 <div id="places"></div>
 
 <div id="bucketScreen" class="hidden">
@@ -50,132 +49,167 @@ onkeypress="if(event.key==='Enter') searchPlace(this.value)">
 <div id="bucket"></div>
 </div>
 
+<div id="taskScreen" class="hidden">
+<h3>Tasks</h3>
+Points: <span id="points">0</span>
+</div>
+
 <div class="nav">
 <button onclick="showTab('places')">Explore</button>
 <button onclick="showTab('bucketScreen')">Bucket</button>
+<button onclick="showTab('taskScreen')">Tasks</button>
 </div>
 
 </div>
 
-<!-- GOOGLE MAP -->
+<!-- FIREBASE -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut }
+from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "YOUR_FIREBASE_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  projectId: "YOUR_PROJECT"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+
+window.googleLogin = function(){
+  const provider = new GoogleAuthProvider();
+  signInWithPopup(auth, provider)
+    .then(()=>showApp())
+    .catch(()=>alert("Login failed"));
+};
+
+onAuthStateChanged(auth,user=>{
+  if(user) showApp();
+});
+
+window.logout = function(){
+  signOut(auth).then(()=>location.reload());
+};
+</script>
+
+<!-- APP LOGIC -->
 <script>
-const GOOGLE_API_KEY = "AIzaSyAUEk_qiRoRyjaW0Vgrlejx_61f8E8AtLQ";
+const API_KEY = "11246f50749e4f76b6d69ff9bb749313";
 
-let map, service;
-let userLat=28.61,userLon=77.20;
-let bucket = JSON.parse(localStorage.getItem("bucket"))||[];
-let points = parseInt(localStorage.getItem("points"))||0;
+let map, userLat=28.61, userLon=77.20;
+let bucket = JSON.parse(localStorage.getItem("bucket")||"[]");
+let points = parseInt(localStorage.getItem("points")||"0");
 
+/* INIT */
+function showApp(){
+  document.getElementById("loginPage").style.display="none";
+  document.getElementById("app").style.display="block";
+  initMap();
+  fetchPlaces();
+  renderBucket();
+  updatePoints();
+}
+
+/* MAP */
 function initMap(){
-  map = new google.maps.Map(document.getElementById("map"),{
-    center:{lat:userLat,lng:userLon},
-    zoom:14
-  });
+  if(map) map.remove();
+  map = L.map('map').setView([userLat,userLon],13);
 
-  service = new google.maps.places.PlacesService(map);
+  L.tileLayer(`https://maps.geoapify.com/v1/tile/osm-bright/{z}/{x}/{y}.png?apiKey=${API_KEY}`).addTo(map);
 
-  loadPlaces();
+  L.marker([userLat,userLon]).addTo(map);
 }
 
-function loadPlaces(){
-  const request = {
-    location: new google.maps.LatLng(userLat,userLon),
-    radius:2000,
-    type:['tourist_attraction','restaurant','cafe','park']
-  };
+/* SEARCH */
+document.getElementById("searchInput").addEventListener("keypress", async(e)=>{
+  if(e.key==="Enter"){
+    const q=e.target.value;
 
-  service.nearbySearch(request,(results,status)=>{
-    if(status !== google.maps.places.PlacesServiceStatus.OK){
-      document.getElementById("places").innerHTML="No places";
-      return;
-    }
+    const res = await fetch(`https://api.geoapify.com/v1/geocode/search?text=${q}&apiKey=${API_KEY}`);
+    const data = await res.json();
 
-    let html="";
-    results.slice(0,8).forEach(p=>{
-      const img = p.photos ? p.photos[0].getUrl() : "";
-      const rating = p.rating || "N/A";
+    userLat=data.features[0].properties.lat;
+    userLon=data.features[0].properties.lon;
 
-      html += `
-      <div class="card">
-        <img src="${img}">
-        <b>${p.name}</b><br>
-        ⭐ ${rating}<br>
-        <button onclick="direction(${p.geometry.location.lat()},${p.geometry.location.lng()})">Direction</button>
-        <button onclick="addBucket('${p.name}')">Save</button>
-        <button onclick="visit('${p.name}')">Visit</button>
-      </div>`;
-    });
+    initMap();
+    fetchPlaces();
+  }
+});
 
-    document.getElementById("places").innerHTML = html;
+/* FETCH */
+async function fetchPlaces(){
+  document.getElementById("places").innerHTML="Loading...";
+
+  const url=`https://api.geoapify.com/v2/places?categories=tourism,restaurant,cafe&filter=circle:${userLon},${userLat},3000&limit=10&apiKey=${API_KEY}`;
+
+  const res=await fetch(url);
+  const data=await res.json();
+
+  let html="";
+  data.features.forEach(p=>{
+    const name=p.properties.name||"Place";
+    const lat=p.properties.lat;
+    const lon=p.properties.lon;
+
+    html+=`
+    <div class="card">
+      <img src="https://source.unsplash.com/400x200/?${name}">
+      <b>${name}</b><br>
+      <button onclick="direction(${lat},${lon})">Direction</button>
+      <button onclick="addBucket('${name}')">Save</button>
+      <button onclick="visit()">Visit</button>
+    </div>`;
   });
+
+  document.getElementById("places").innerHTML=html;
 }
 
+/* FUNCTIONS */
 function direction(lat,lon){
   window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}`);
 }
 
 function getLocation(){
   navigator.geolocation.getCurrentPosition(pos=>{
-    userLat = pos.coords.latitude;
-    userLon = pos.coords.longitude;
+    userLat=pos.coords.latitude;
+    userLon=pos.coords.longitude;
     initMap();
+    fetchPlaces();
   });
 }
 
-function searchPlace(q){
-  const geocoder = new google.maps.Geocoder();
-  geocoder.geocode({address:q},(res)=>{
-    userLat = res[0].geometry.location.lat();
-    userLon = res[0].geometry.location.lng();
-    initMap();
-  });
-}
-
-/* BUCKET */
-function addBucket(name){
-  if(!bucket.includes(name)){
-    bucket.push(name);
+function addBucket(n){
+  if(!bucket.includes(n)){
+    bucket.push(n);
     localStorage.setItem("bucket",JSON.stringify(bucket));
     renderBucket();
   }
 }
 
 function renderBucket(){
-  let html="";
-  bucket.forEach(b=>{
-    html += `<div class="card">${b}</div>`;
-  });
-  document.getElementById("bucket").innerHTML=html;
+  document.getElementById("bucket").innerHTML =
+    bucket.map(b=>`<div class="card">${b}</div>`).join("");
 }
 
-/* VISIT REWARD */
-function visit(name){
+function visit(){
   points+=10;
   localStorage.setItem("points",points);
-  alert("🎉 +10 points for visiting "+name);
+  updatePoints();
+  alert("🎉 +10 points");
 }
 
-/* TAB */
-function showTab(tab){
+function updatePoints(){
+  document.getElementById("points").innerText=points;
+}
+
+function showTab(t){
   document.getElementById("places").classList.add("hidden");
   document.getElementById("bucketScreen").classList.add("hidden");
-  document.getElementById(tab).classList.remove("hidden");
-}
-
-/* LOGIN (SIMPLE) */
-function googleLogin(){
-  document.getElementById("loginPage").style.display="none";
-  document.getElementById("app").style.display="block";
-  initMap();
-}
-
-function logout(){
-  location.reload();
+  document.getElementById("taskScreen").classList.add("hidden");
+  document.getElementById(t).classList.remove("hidden");
 }
 </script>
-
-<!-- GOOGLE SCRIPT -->
-<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAUEk_qiRoRyjaW0Vgrlejx_61f8E8AtLQ&libraries=places&callback=initMap" async defer></script>
 
 </body>
 </html>
