@@ -48,12 +48,14 @@ button{
 }
 
 /* MAP */
-#map{
-  height:60vh;
+
+ #map{
   transition:height 0.3s ease;
 }
+}
+}
 
-/* SHEET */
+/* 🔥 PREMIUM SHEET */
 #sheet{
   position:fixed;
   bottom:0;
@@ -65,6 +67,10 @@ button{
   padding:15px;
   overflow-y:auto;
   box-shadow:0 -10px 40px rgba(0,0,0,0.6);
+  #sheet{
+  height:45vh;
+  overflow-y:auto;
+}
 }
 
 /* HANDLE */
@@ -84,7 +90,6 @@ button{
   padding-bottom:80px;
 }
 
-/* CARD */
 .card{
   background:#1e293b;
   border-radius:16px;
@@ -117,14 +122,12 @@ button{
   font-size:12px;
   padding:6px 8px;
 }
-</style>
-</head>
 
 <body>
 
-<!-- LOGIN (UNCHANGED) -->
+<!-- LOGIN -->
 <div id="loginPage">
-<video autoplay muted loop style="position:absolute;width:100%;height:100%;object-fit:cover;z-index:-1;">
+<video autoplay muted loop>
   <source src="https://cdn.coverr.co/videos/coverr-ganges-river-in-india-1574/1080p.mp4">
 </video>
 
@@ -135,7 +138,7 @@ button{
 </div>
 
 <!-- APP -->
-<div id="app" style="display:none;">
+<div id="app">
 <div class="header">Wanderer Pro</div>
 
 <input placeholder="Search..."
@@ -148,6 +151,7 @@ onkeypress="if(event.key==='Enter') searchPlace(this.value)">
 
 <div id="map"></div>
 
+<!-- DRAG SHEET -->
 <div id="sheet">
 <div id="handle"></div>
 <div id="places"></div>
@@ -162,6 +166,24 @@ const API_KEY="11246f50749e4f76b6d69ff9bb749313";
 
 let map;
 let userLat=28.61,userLon=77.20;
+  const sheet = document.getElementById("sheet");
+const mapEl = document.getElementById("map");
+
+let lastScroll = 0;
+
+sheet.addEventListener("scroll", () => {
+  const currentScroll = sheet.scrollTop;
+
+  if(currentScroll > 50){
+    // shrink map
+    mapEl.style.height = "35vh";
+  }else{
+    // normal size
+    mapEl.style.height = "60vh";
+  }
+
+  lastScroll = currentScroll;
+});
 
 /* MAP */
 function initMap(){
@@ -175,7 +197,7 @@ function initMap(){
   fetchPlaces();
 }
 
-/* FETCH */
+/* API */
 async function fetchPlaces(){
   const el=document.getElementById("places");
   el.innerHTML="Loading...";
@@ -186,29 +208,31 @@ async function fetchPlaces(){
     const res=await fetch(url);
     const data=await res.json();
 
-    let html=`<div class="grid">`;
+let html = `<div class="grid">`;
 
-    data.features.forEach(p=>{
-      const name=p.properties.name||"Place";
-      const lat=p.properties.lat;
-      const lon=p.properties.lon;
+data.features.forEach(p=>{
+  const name = p.properties.name || "Place";
+  const lat = p.properties.lat;
+  const lon = p.properties.lon;
 
-      html+=`
-      <div class="card">
-        <img src="https://source.unsplash.com/400x300/?travel,city">
-        <div class="card-content">
-          <div class="card-title">${name}</div>
-          <div class="actions">
-            <button onclick="direction(${lat},${lon})">🧭</button>
-            <button onclick="visit('${name}')">⭐</button>
-          </div>
-        </div>
-      </div>`;
-    });
+  html += `
+  <div class="card">
+    <img src="https://source.unsplash.com/400x300/?travel,city" />
 
-    html+=`</div>`;
-    el.innerHTML=html;
+    <div class="card-content">
+      <div class="card-title">${name}</div>
 
+      <div class="actions">
+        <button onclick="direction(${lat},${lon})">🧭</button>
+        <button onclick="addBucket('${name}')">💾</button>
+        <button onclick="visit('${name}')">⭐</button>
+      </div>
+    </div>
+  </div>`;
+});
+
+html += `</div>`;
+document.getElementById("places").innerHTML = html;
   }catch{
     el.innerHTML="Error loading";
   }
@@ -239,23 +263,37 @@ function direction(lat,lon){
   window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}`);
 }
 
-/* SCROLL MAP RESIZE (FIXED SAFE) */
-window.onload = () => {
-  const sheet = document.getElementById("sheet");
-  const mapEl = document.getElementById("map");
+/* 🔥 DRAG SYSTEM */
+const sheet=document.getElementById("sheet");
+let startY=0;
+let currentY=0;
+let isDragging=false;
 
-  if(sheet){
-    sheet.addEventListener("scroll", () => {
-      let scroll = sheet.scrollTop;
-      let newHeight = 60 - (scroll / 5);
+sheet.addEventListener("mousedown",startDrag);
+sheet.addEventListener("touchstart",startDrag);
 
-      if(newHeight < 30) newHeight = 30;
-      if(newHeight > 60) newHeight = 60;
+function startDrag(e){
+  isDragging=true;
+  startY=e.touches?e.touches[0].clientY:e.clientY;
+}
 
-      mapEl.style.height = newHeight + "vh";
-    });
+document.addEventListener("mousemove",drag);
+document.addEventListener("touchmove",drag);
+
+function drag(e){
+  if(!isDragging) return;
+  currentY=e.touches?e.touches[0].clientY:e.clientY;
+  let diff=startY-currentY;
+
+  if(diff>50){
+    sheet.style.height="80vh";
+  }else if(diff<-50){
+    sheet.style.height="40vh";
   }
-};
+}
+
+document.addEventListener("mouseup",()=>isDragging=false);
+document.addEventListener("touchend",()=>isDragging=false);
 
 /* LOGIN SAME */
 function googleLogin(){
@@ -266,47 +304,6 @@ function googleLogin(){
 
 function logout(){
   location.reload();
-}
-  window.addEventListener("load", () => {
-  const sheet = document.getElementById("sheet");
-
-  if(!sheet) return;
-
-  let startY = 0;
-  let currentY = 0;
-  let isDragging = false;
-
-  function startDrag(e){
-    isDragging = true;
-    startY = e.touches ? e.touches[0].clientY : e.clientY;
-  }
-
-  function drag(e){
-    if(!isDragging) return;
-
-    currentY = e.touches ? e.touches[0].clientY : e.clientY;
-    let diff = startY - currentY;
-
-    // smooth control
-    if(diff > 80){
-      sheet.style.height = "80vh";
-    }else if(diff < -80){
-      sheet.style.height = "40vh";
-    }
-  }
-
-  function stopDrag(){
-    isDragging = false;
-  }
-
-  sheet.addEventListener("mousedown", startDrag);
-  sheet.addEventListener("touchstart", startDrag);
-
-  document.addEventListener("mousemove", drag);
-  document.addEventListener("touchmove", drag);
-
-  document.addEventListener("mouseup", stopDrag);
-  document.addEventListener("touchend", stopDrag);
 }
 </script>
 
