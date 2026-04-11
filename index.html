@@ -218,16 +218,18 @@ async function fetchPlaces(){
       const lat = p.properties.lat;
       const lon = p.properties.lon;
 
-      html += `
-      <div class="card">
-        <img src="https://picsum.photos/400/200?random=${Math.random()}">
-        <div class="card-content">
-          <div class="card-title">${name}</div>
-          <button onclick="direction(${lat},${lon})">🧭</button>
-          <button onclick="addBucket('${name}')">💾</button>
-          <button onclick="visit('${name}')">⭐</button>
-        </div>
-      </div>`;
+html += `
+<div class="card">
+  <img src="https://picsum.photos/200?random=${Math.random()}">
+  <div class="card-content">
+    <div class="card-title">${name}</div>
+    <div class="card-actions">
+      <button onclick="direction(${lat},${lon})">🧭</button>
+      <button onclick="addBucket('${name}')">💾</button>
+      <button onclick="visit('${name}')">⭐</button>
+    </div>
+  </div>
+</div>`;
     });
 
     el.innerHTML=html;
