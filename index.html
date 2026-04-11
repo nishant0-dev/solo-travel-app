@@ -10,118 +10,120 @@
 <style>
 body{
   margin:0;
-  font-family:sans-serif;
+  font-family:'Segoe UI',sans-serif;
+  background:#0b1220;
   color:white;
-  overflow:hidden;
-}
-
-/* LOGIN */
-#loginPage{
-  position:relative;
-  height:100vh;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-}
-
-#loginPage video{
-  position:absolute;
-  width:100%;
-  height:100%;
-  object-fit:cover;
-  z-index:-1;
-}
-
-.login-box{
-  background:rgba(0,0,0,0.6);
-  padding:45px;
-  border-radius:20px;
-  text-align:center;
-  backdrop-filter:blur(10px);
-}
-
-.login-box h2{
-  font-size:32px;
-}
-
-.login-box button{
-  padding:12px 20px;
-  font-size:16px;
-  border:none;
-  border-radius:12px;
-  background:#3b82f6;
-  color:white;
-}
-
-/* APP */
-#app{
-  display:none;
-  background:#0f172a;
-  height:100vh;
 }
 
 /* HEADER */
 .header{
   text-align:center;
-  padding:10px;
-  font-size:18px;
+  padding:15px;
+  font-size:22px;
+  font-weight:bold;
+  background:#0f172a;
 }
 
 /* SEARCH */
 input{
-  padding:12px;
-  border-radius:12px;
+  width:92%;
+  margin:10px auto;
+  display:block;
+  padding:14px;
+  border-radius:14px;
   border:none;
-  margin:10px;
-  width:90%;
   background:#1e293b;
   color:white;
+  font-size:15px;
+}
+
+/* BUTTON */
+button{
+  padding:8px 14px;
+  border-radius:10px;
+  border:none;
+  background:#2563eb;
+  color:white;
+  cursor:pointer;
 }
 
 /* MAP */
 #map{
-  height:60vh;
+  height:55vh;
+  border-radius:20px;
+  margin:10px;
 }
 
-/* 🔥 DRAG SHEET */
+/* 🔥 PREMIUM SHEET */
 #sheet{
   position:fixed;
   bottom:0;
-  left:0;
   width:100%;
-  height:40vh;
-  background:#020617;
-  border-radius:20px 20px 0 0;
-  padding:10px;
-  overflow:auto;
-  transition:0.3s;
+  height:45vh;
+  background:rgba(15,23,42,0.95);
+  backdrop-filter:blur(20px);
+  border-radius:25px 25px 0 0;
+  padding:15px;
+  overflow-y:auto;
+  box-shadow:0 -10px 40px rgba(0,0,0,0.6);
 }
 
 /* HANDLE */
 #handle{
-  width:50px;
-  height:5px;
-  background:gray;
-  margin:5px auto;
+  width:60px;
+  height:6px;
+  background:#475569;
+  margin:8px auto;
   border-radius:10px;
+}
+
+/* GRID */
+.grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
 }
 
 /* CARD */
 .card{
   background:#1e293b;
-  margin:10px 0;
-  border-radius:12px;
-  display:flex;
+  border-radius:16px;
+  overflow:hidden;
+  transition:0.3s;
 }
 
+.card:hover{
+  transform:translateY(-5px);
+}
+
+/* IMAGE */
 .card img{
-  width:120px;
-  height:100px;
+  width:100%;
+  height:120px;
   object-fit:cover;
 }
 
+/* CONTENT */
 .card-content{
   padding:10px;
+}
+
+.card-title{
+  font-weight:600;
+  font-size:14px;
+  margin-bottom:6px;
+}
+
+/* BUTTON ROW */
+.actions{
+  display:flex;
+  justify-content:space-between;
+  margin-top:8px;
+}
+
+.actions button{
+  font-size:12px;
+  padding:6px 8px;
 }
 </style>
 </head>
@@ -193,24 +195,30 @@ async function fetchPlaces(){
     const res=await fetch(url);
     const data=await res.json();
 
-    let html="";
-    data.features.forEach(p=>{
-      const name=p.properties.name||"Place";
-      const lat=p.properties.lat;
-      const lon=p.properties.lon;
+  let html = `<div class="grid">`;
 
-      html+=`
-      <div class="card">
-        <img src="https://picsum.photos/200?random=${Math.random()}">
-        <div class="card-content">
-          <b>${name}</b><br>
-          <button onclick="direction(${lat},${lon})">Direction</button>
-        </div>
-      </div>`;
-    });
+data.features.forEach(p=>{
+  const name = p.properties.name || "Place";
+  const lat = p.properties.lat;
+  const lon = p.properties.lon;
 
-    el.innerHTML=html;
+  html += `
+  <div class="card">
+    <img src="https://source.unsplash.com/400x300/?travel,${name}">
+    <div class="card-content">
+      <div class="card-title">${name}</div>
 
+      <div class="actions">
+        <button onclick="direction(${lat},${lon})">🧭</button>
+        <button onclick="addBucket('${name}')">💾</button>
+        <button onclick="visit('${name}')">⭐</button>
+      </div>
+    </div>
+  </div>`;
+});
+
+html += `</div>`;
+document.getElementById("places").innerHTML = html;
   }catch{
     el.innerHTML="Error loading";
   }
