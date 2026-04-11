@@ -5,7 +5,7 @@
 <title>Wanderer Pro</title>
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-
+<link rel="icon" href="https://cdn-icons-png.flaticon.com/512/854/854878.png">
 <style>
 body{
   margin:0;
@@ -207,7 +207,7 @@ async function fetchPlaces(){
 
       html += `
       <div class="card">
-        <img src="https://source.unsplash.com/400x200/?${name}">
+        <img src="https://picsum.photos/400/200?random=${Math.random()}">
         <div class="card-content">
           <div class="card-title">${name}</div>
           <button onclick="direction(${lat},${lon})">🧭</button>
