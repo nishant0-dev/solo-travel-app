@@ -298,11 +298,14 @@ document.addEventListener("touchend",()=>isDragging=false);
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut }
 from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-
-const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT.firebaseapp.com",
-  projectId: "YOUR_PROJECT"
+ const firebaseConfig = {
+    apiKey: "AIzaSyDlu9Xw8_Nb9sN-TCyMsjORViHQD9MQnRg",
+    authDomain: "wanderer-6b780.firebaseapp.com",
+    projectId: "wanderer-6b780",
+    storageBucket: "wanderer-6b780.firebasestorage.app",
+    messagingSenderId: "333975351570",
+    appId: "1:333975351570:web:941fbfde1b8d8a9fe303cb",
+    measurementId: "G-CN3F0ZWEB1"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -310,16 +313,15 @@ const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
 
 /* LOGIN */
-window.googleLogin = function(){
-  signInWithPopup(auth, provider)
-    .then((result)=>{
-      document.getElementById("loginPage").style.display="none";
-      document.getElementById("app").style.display="block";
-      initMap();
-    })
-    .catch((error)=>{
-      alert("Login failed: " + error.message);
-    });
+window.googleLogin = async function(){
+  try{
+    await signInWithPopup(auth, provider);
+    document.getElementById("loginPage").style.display="none";
+    document.getElementById("app").style.display="block";
+    initMap();
+  }catch(e){
+    alert("Login failed: " + e.message);
+  }
 };
 
 /* AUTO LOGIN */
@@ -336,7 +338,6 @@ window.logout = function(){
   signOut(auth).then(()=>location.reload());
 };
 </script>
-
-
 </body>
+</head>
 </html>
