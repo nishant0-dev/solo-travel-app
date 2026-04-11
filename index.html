@@ -50,9 +50,8 @@ button{
 /* MAP */
 
  #map{
+  height:60vh;
   transition:height 0.3s ease;
-}
-}
 }
 
 /* 🔥 PREMIUM SHEET */
@@ -122,6 +121,7 @@ button{
   font-size:12px;
   padding:6px 8px;
 }
+</style>
 
 <body>
 
@@ -166,24 +166,22 @@ const API_KEY="11246f50749e4f76b6d69ff9bb749313";
 
 let map;
 let userLat=28.61,userLon=77.20;
+ window.onload = () => {
   const sheet = document.getElementById("sheet");
-const mapEl = document.getElementById("map");
+  const mapEl = document.getElementById("map");
 
-let lastScroll = 0;
+  if(sheet){
+    sheet.addEventListener("scroll", () => {
+      let scroll = sheet.scrollTop;
+      let newHeight = 60 - (scroll / 5);
 
-sheet.addEventListener("scroll", () => {
-  const currentScroll = sheet.scrollTop;
+      if(newHeight < 30) newHeight = 30;
+      if(newHeight > 60) newHeight = 60;
 
-  if(currentScroll > 50){
-    // shrink map
-    mapEl.style.height = "35vh";
-  }else{
-    // normal size
-    mapEl.style.height = "60vh";
+      mapEl.style.height = newHeight + "vh";
+    });
   }
-
-  lastScroll = currentScroll;
-});
+};
 
 /* MAP */
 function initMap(){
