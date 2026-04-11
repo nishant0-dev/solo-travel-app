@@ -294,16 +294,49 @@ document.addEventListener("mouseup",()=>isDragging=false);
 document.addEventListener("touchend",()=>isDragging=false);
 
 /* LOGIN SAME */
-function googleLogin(){
-  document.getElementById("loginPage").style.display="none";
-  document.getElementById("app").style.display="block";
-  initMap();
-}
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut }
+from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-function logout(){
-  location.reload();
-}
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  projectId: "YOUR_PROJECT"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const provider = new GoogleAuthProvider();
+
+/* LOGIN */
+window.googleLogin = function(){
+  signInWithPopup(auth, provider)
+    .then((result)=>{
+      document.getElementById("loginPage").style.display="none";
+      document.getElementById("app").style.display="block";
+      initMap();
+    })
+    .catch((error)=>{
+      alert("Login failed: " + error.message);
+    });
+};
+
+/* AUTO LOGIN */
+onAuthStateChanged(auth, (user)=>{
+  if(user){
+    document.getElementById("loginPage").style.display="none";
+    document.getElementById("app").style.display="block";
+    initMap();
+  }
+});
+
+/* LOGOUT */
+window.logout = function(){
+  signOut(auth).then(()=>location.reload());
+};
 </script>
+
 
 </body>
 </html>
