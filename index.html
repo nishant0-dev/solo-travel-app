@@ -83,6 +83,24 @@ input{
   margin:5px auto;
   border-radius:10px;
 }
+  #suggestions{
+  width:92%;
+  margin:auto;
+  background:#1e293b;
+  border-radius:10px;
+  max-height:200px;
+  overflow:auto;
+}
+
+#suggestions div{
+  padding:10px;
+  border-bottom:1px solid #334155;
+  cursor:pointer;
+}
+
+#suggestions div:hover{
+  background:#334155;
+}
 
 /* GRID */
 .grid{
@@ -141,10 +159,10 @@ input{
 
 <!-- LOGIN -->
 <div id="loginPage">
-<video autoplay muted loop>
-  <source src="https://cdn.coverr.co/videos/coverr-ganges-river-in-india-1574/1080p.mp4">
+<video autoplay muted loop playsinline id="bgVideo">
+  <source src="video.mp4" type="video/mp4">
 </video>
-
+  
 <div style="position:relative;z-index:2;text-align:center;">
 <h2>Wanderer Pro 🌍</h2>
 <button onclick="googleLogin()">Login with Google</button>
@@ -196,6 +214,13 @@ function initMap(){
 
   fetchPlaces();
 }
+  document.addEventListener("DOMContentLoaded", () => {
+  const vid = document.getElementById("bgVideo");
+  if (vid) {
+    vid.muted = true;
+    vid.play().catch(()=>{});
+  }
+})
 
 async function fetchPlaces(){
   const res=await fetch(`https://api.geoapify.com/v2/places?categories=tourism.sights,catering.restaurant&filter=circle:${userLon},${userLat},3000&limit=10&apiKey=${API_KEY}`);
@@ -291,14 +316,13 @@ document.getElementById("sheet").addEventListener("scroll",()=>{
   document.getElementById("map").style.height="30vh";
 });
 </script>
+  
 
 <!-- FIREBASE SAME -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut }
-  playSound("loginSound");
 from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-
 const firebaseConfig = {
    apiKey: "AIzaSyDlu9Xw8_Nb9sN-TCyMsjORViHQD9MQnRg",
   authDomain: "wanderer-6b780.firebaseapp.com",
