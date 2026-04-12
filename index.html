@@ -308,15 +308,19 @@ function initMap(){
 
   fetchPlaces();
 }
-  document.addEventListener("DOMContentLoaded", () => {
+
+document.addEventListener("DOMContentLoaded", () => {
+
   const vid = document.getElementById("bgVideo");
   if (vid) {
     vid.muted = true;
     vid.play().catch(()=>{});
   }
 
-async function fetchPlaces(){
+});
 
+/* FETCH */
+async function fetchPlaces(){
   document.getElementById("places").innerHTML = `
     <div class="grid">
       <div class="skeleton"></div>
@@ -325,6 +329,7 @@ async function fetchPlaces(){
       <div class="skeleton"></div>
     </div>
   `;
+
   const res=await fetch(`https://api.geoapify.com/v2/places?categories=tourism.sights,catering.restaurant&filter=circle:${userLon},${userLat},3000&limit=10&apiKey=${API_KEY}`);
   const data=await res.json();
 
@@ -352,20 +357,20 @@ async function fetchPlaces(){
   document.getElementById("places").innerHTML=html;
 }
 
+/* FUNCTIONS */
 function direction(lat,lon){
   window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}`);
 }
 
 function savePlace(name){
   let saved = JSON.parse(localStorage.getItem("saved")) || [];
-
   if(!saved.includes(name)){
     saved.push(name);
     localStorage.setItem("saved", JSON.stringify(saved));
-
-    playSound("saveSound"); // 🔊 added
+    playSound("saveSound");
   }
 }
+
 function showTab(tab){
   if(tab==="explore"){
     document.getElementById("sheet").style.display="block";
@@ -374,22 +379,26 @@ function showTab(tab){
     document.getElementById("sheet").style.display="none";
     document.getElementById("saved").style.display="block";
   }
+}
+
 function loadSaved(){
   let saved=JSON.parse(localStorage.getItem("saved"))||[];
-  document.getElementById("saved").innerHTML=saved.map(p=>`<div class="card">${p}</div>`).join("");
+  document.getElementById("saved").innerHTML=
+    saved.map(p=>`<div class="card">${p}</div>`).join("");
 }
+
 function playSound(id){
   const sound = document.getElementById(id);
   if(!sound) return;
-
   sound.currentTime = 0;
-  sound.play().catch(()=>{}); // prevents crash
+  sound.play().catch(()=>{});
 }
-  function toggleMenu(){
+
+function toggleMenu(){
   document.getElementById("menu").classList.toggle("open");
 }
-  
-/* SEARCH SUGGEST */
+
+/* SEARCH */
 async function suggestPlaces(q){
   if(q.length<2) return;
 
@@ -404,26 +413,26 @@ async function suggestPlaces(q){
   document.getElementById("suggestions").innerHTML=html;
 }
 
-  function selectPlace(lat,lon){
+function selectPlace(lat,lon){
   userLat=lat;
   userLon=lon;
-  document.getElementById("suggestions").innerHTML=""; // ADD THIS
+  document.getElementById("suggestions").innerHTML="";
   initMap();
 }
-  function visit(name){
+
+function visit(name){
   points += 10;
   localStorage.setItem("points", points);
-
-  playSound("rewardSound"); // 🔊 added
-
+  playSound("rewardSound");
   alert("🎉 Visited " + name);
 }
 
-/* MAP SHRINK */
+/* MAP SCROLL */
 document.getElementById("sheet").addEventListener("scroll",()=>{
   document.getElementById("map").style.height="30vh";
 });
-  let startY=0;
+
+let startY=0;
 
 document.getElementById("handle").addEventListener("touchstart",(e)=>{
   startY=e.touches[0].clientY;
@@ -441,7 +450,8 @@ document.getElementById("handle").addEventListener("touchmove",(e)=>{
   if(diff<-50){
     document.getElementById("sheet").style.height="50vh";
     document.getElementById("map").style.height="45vh";
-}
+  }
+});
 </script>
   
 
