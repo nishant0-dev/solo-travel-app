@@ -238,16 +238,6 @@ button{
   font-size:18px;
   cursor:pointer;
 }
-  /* PROFILE BUTTON */
-#profileBtn{
-  position:absolute;
-  left:15px;
-  top:15px;
-  font-size:20px;
-  cursor:pointer;
-  z-index:1100;
-}
-
 /* OVERLAY */
 #overlay{
   position:fixed;
@@ -574,7 +564,7 @@ document.addEventListener("DOMContentLoaded",()=>{
 
 
 // 🔥 FIREBASE (NO <script> HERE)
-
+<script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut }
 from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
