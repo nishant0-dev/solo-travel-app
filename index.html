@@ -5,12 +5,10 @@
 <title>Wanderer Pro</title>
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-<audio id="loginSound" src="https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3"></audio>
-<audio id="saveSound" src="https://assets.mixkit.co/active_storage/sfx/270/270-preview.mp3"></audio>
-<audio id="rewardSound" src="https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3"></audio>
-  <link rel="manifest" href="manifest.json">
+
+<link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#0f172a">
-  <button id="installBtn" onclick="installApp()" style="display:none">Install App</button>
+
 <style>
 body{
   margin:0;
@@ -19,51 +17,58 @@ body{
   color:white;
   overflow:hidden;
 }
-.actions{
-  display:flex;
-  gap:6px;
-  margin-top:5px;
-}
 
-.actions button{
-  flex:1;
-  font-size:12px;
-  padding:6px;
-  border-radius:8px;
-}
 /* HEADER */
 .header{
   text-align:center;
   padding:12px;
   font-size:20px;
-  font-weight:600;
 }
 
-/* USER BAR */
-#userBar{
-  display:flex;
-  justify-content:space-between;
-  padding:10px 15px;
-  font-size:14px;
-  color:#94a3b8;
+/* PROFILE BUTTON */
+#profileBtn{
+  position:absolute;
+  left:15px;
+  top:15px;
+  cursor:pointer;
+  z-index:1100;
 }
 
-/* SEARCH */
-input{
-  width:92%;
-  margin:10px auto;
-  display:block;
-  padding:12px;
-  border-radius:12px;
-  border:none;
-  background:#1e293b;
-  color:white;
+/* OVERLAY */
+#overlay{
+  position:fixed;
+  width:100%;
+  height:100%;
+  background:rgba(0,0,0,0.5);
+  opacity:0;
+  pointer-events:none;
+  transition:0.3s;
+  z-index:999;
+}
+#overlay.open{
+  opacity:1;
+  pointer-events:auto;
+}
+
+/* MENU */
+#menu{
+  position:fixed;
+  left:-260px;
+  top:0;
+  width:250px;
+  height:100%;
+  background:#020617;
+  padding:20px;
+  transition:0.3s;
+  z-index:1000;
+}
+#menu.open{
+  left:0;
 }
 
 /* MAP */
 #map{
   height:45vh;
-  transition:0.3s;
 }
 
 /* SHEET */
@@ -78,87 +83,14 @@ input{
   padding:10px;
 }
 
-/* HANDLE */
-#handle{
-  width:50px;
-  height:5px;
-  background:#475569;
-  margin:5px auto;
-  border-radius:10px;
-}
-  #suggestions{
-  width:92%;
-  margin:auto;
-  background:#1e293b;
-  border-radius:10px;
-  max-height:200px;
-  overflow:auto;
-}
-
-#suggestions div{
-  padding:10px;
-  border-bottom:1px solid #334155;
-  cursor:pointer;
-}
-
-#suggestions div:hover{
-  background:#334155;
-}
-
-/* GRID */
-.grid{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:10px;
-}
-
-/* CARD */
-.card{
-  background:#1e293b;
-  border-radius:16px;
-  overflow:hidden;
-  box-shadow:0 8px 20px rgba(0,0,0,0.4);
-  transition:0.2s;
-}
-
-.card:hover{
-  transform:translateY(-4px);
-}
-.card img{
-  width:100%;
-  height:160px;
-  object-fit:cover;
-  border-radius:12px 12px 0 0;
-}
-
-.card-content{
-  padding:8px;
-  font-size:13px;
-}
-
-/* NAV */
-.nav{
-  position:fixed;
-  bottom:0;
-  width:100%;
-  display:flex;
-  justify-content:space-around;
-  background:#020617;
-  padding:10px;
-}
-
-/* LOGIN FIX */
+/* LOGIN */
 #loginPage{
   position:relative;
   height:100vh;
-  overflow:hidden;
 }
 
-/* VIDEO BACKGROUND */
 #loginPage video{
   position:absolute;
-  top:0;
-  left:0;
   width:100%;
   height:100%;
   object-fit:cover;
@@ -166,91 +98,24 @@ input{
   pointer-events:none;
 }
 
-/* CONTENT ABOVE VIDEO */
 #loginPage div{
   position:relative;
   z-index:2;
-}
-
-  /* SMOOTH ANIMATION */
-*{
-  transition: all 0.25s ease;
-}
-
-/* GLASS HEADER */
-.header{
-  backdrop-filter: blur(10px);
-  background: rgba(0,0,0,0.4);
-}
-
-/* CARD HOVER */
-.card{
-  transform: scale(1);
-}
-.card:hover{
-  transform: scale(1.04);
-}
-
-/* BUTTON STYLE */
-button{
-  background: linear-gradient(135deg,#3b82f6,#2563eb);
-  border:none;
-  color:white;
-  border-radius:10px;
-  padding:6px 10px;
-}
-
-/* SKELETON */
-.skeleton{
-  background: linear-gradient(90deg,#1e293b 25%,#334155 50%,#1e293b 75%);
-  background-size:200% 100%;
-  animation: shimmer 1.5s infinite;
-  height:180px;
-  border-radius:12px;
-}
-
-@keyframes shimmer{
-  0%{background-position:-200% 0}
-  100%{background-position:200% 0}
-}
-
-/* SIDE MENU */
-#menu{
-  position:fixed;
-  right:-250px;
-  top:0;
-  width:250px;
-  height:100%;
-  background:#020617;
-  padding:20px;
-  transition:0.3s;
-  z-index:1000;
-}
-
-#menu.open{
-  right:0;
-}
-
-/* PROFILE BTN */
-#profileBtn{
-  position:absolute;
-  right:15px;
-  top:15px;
-  font-size:18px;
-  cursor:pointer;
 }
 </style>
 </head>
 
 <body>
 
+<button id="installBtn" onclick="installApp()" style="display:none">Install</button>
+
 <!-- LOGIN -->
 <div id="loginPage">
 <video autoplay muted loop playsinline id="bgVideo">
   <source src="video.mp4" type="video/mp4">
 </video>
-  
-<div style="position:relative;z-index:2;text-align:center;">
+
+<div style="text-align:center;">
 <h2>Wanderer Pro 🌍</h2>
 <button onclick="googleLogin()">Login with Google</button>
 </div>
@@ -258,21 +123,19 @@ button{
 
 <!-- APP -->
 <div id="app" style="display:none;">
+<div id="profileBtn" onclick="toggleMenu()">☰</div>
 <div class="header">Wanderer Pro</div>
-  <div id="profileBtn" onclick="toggleMenu()">👤</div>
+
+<div id="overlay" onclick="toggleMenu()"></div>
 
 <div id="menu">
-  <h3>Menu</h3>
-  <p id="menuUser"></p>
-
+  <h3 id="menuUser">User</h3>
+  <p id="menuEmail"></p>
   <button onclick="logout()">Logout</button>
-  <button>Settings</button>
-  <button>About</button>
 </div>
 
 <div id="userBar">
-  <div id="userName">👤 User</div>
-  <div id="userPoints">⭐ 0</div>
+  <div id="userName">User</div>
 </div>
 
 <input id="searchInput" placeholder="Search..." oninput="suggestPlaces(this.value)">
@@ -284,13 +147,6 @@ button{
 <div id="handle"></div>
 <div id="places"></div>
 </div>
-
-<div id="saved" style="display:none"></div>
-
-<div class="nav">
-<button onclick="showTab('explore')">Explore</button>
-<button onclick="showTab('saved')">Saved</button>
-</div>
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -300,105 +156,16 @@ const API_KEY="11246f50749e4f76b6d69ff9bb749313";
 
 let map;
 let userLat=28.61,userLon=77.20;
-let points=parseInt(localStorage.getItem("points"))||0;
 
 function initMap(){
-  if(map) map.remove();
   map=L.map('map').setView([userLat,userLon],13);
-
-  L.tileLayer(`https://maps.geoapify.com/v1/tile/osm-bright/{z}/{x}/{y}.png?apiKey=${API_KEY}`)
-  .addTo(map);
-
-  fetchPlaces();
+  L.tileLayer(`https://maps.geoapify.com/v1/tile/osm-bright/{z}/{x}/{y}.png?apiKey=${API_KEY}`).addTo(map);
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-
-  const vid = document.getElementById("bgVideo");
-  if (vid) {
-    vid.muted = true;
-    vid.play().catch(()=>{});
-  }
-
-});
-
-/* FETCH */
-async function fetchPlaces(){
-  document.getElementById("places").innerHTML = `
-    <div class="grid">
-      <div class="skeleton"></div>
-      <div class="skeleton"></div>
-      <div class="skeleton"></div>
-      <div class="skeleton"></div>
-    </div>
-  `;
-
-  const res=await fetch(`https://api.geoapify.com/v2/places?categories=tourism.sights,catering.restaurant&filter=circle:${userLon},${userLat},3000&limit=10&apiKey=${API_KEY}`);
-  const data=await res.json();
-
-  let html="<div class='grid'>";
-
-  data.features.forEach(p=>{
-    const name=p.properties.name||"Place";
-    const lat=p.properties.lat;
-    const lon=p.properties.lon;
-
-    html+=`
-    <div class="card">
-     <img src="https://picsum.photos/400/300?random=${Math.random()}">
-      <div class="card-content">
-        ${name}
-        <div>
-          <button onclick="direction(${lat},${lon})">🧭</button>
-          <button onclick="savePlace('${name}')">❤️</button>
-        </div>
-      </div>
-    </div>`;
-  });
-
-  html+="</div>";
-  document.getElementById("places").innerHTML=html;
-}
-
-/* FUNCTIONS */
-function direction(lat,lon){
-  window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}`);
-}
-
-function savePlace(name){
-  let saved = JSON.parse(localStorage.getItem("saved")) || [];
-  if(!saved.includes(name)){
-    saved.push(name);
-    localStorage.setItem("saved", JSON.stringify(saved));
-    playSound("saveSound");
-  }
-}
-
-function showTab(tab){
-  if(tab==="explore"){
-    document.getElementById("sheet").style.display="block";
-    document.getElementById("saved").style.display="none";
-  }else{
-    document.getElementById("sheet").style.display="none";
-    document.getElementById("saved").style.display="block";
-  }
-}
-
-function loadSaved(){
-  let saved=JSON.parse(localStorage.getItem("saved"))||[];
-  document.getElementById("saved").innerHTML=
-    saved.map(p=>`<div class="card">${p}</div>`).join("");
-}
-
-function playSound(id){
-  const sound = document.getElementById(id);
-  if(!sound) return;
-  sound.currentTime = 0;
-  sound.play().catch(()=>{});
-}
-
+/* MENU */
 function toggleMenu(){
   document.getElementById("menu").classList.toggle("open");
+  document.getElementById("overlay").classList.toggle("open");
 }
 
 /* SEARCH */
@@ -419,71 +186,27 @@ async function suggestPlaces(q){
 function selectPlace(lat,lon){
   userLat=lat;
   userLon=lon;
-  document.getElementById("suggestions").innerHTML="";
   initMap();
 }
 
-function visit(name){
-  points += 10;
-  localStorage.setItem("points", points);
-  playSound("rewardSound");
-  alert("🎉 Visited " + name);
+/* PWA */
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("sw.js");
 }
 
-<!-- MAIN SCRIPT -->
-<script>
-/* MAP SCROLL */
-document.addEventListener("DOMContentLoaded",()=>{
-
-  document.getElementById("sheet").addEventListener("scroll",()=>{
-    document.getElementById("map").style.height="30vh";
-  });
-
-  let startY=0;
-
-  document.getElementById("handle").addEventListener("touchstart",(e)=>{
-    startY=e.touches[0].clientY;
-  });
-
-  document.getElementById("handle").addEventListener("touchmove",(e)=>{
-    let move=e.touches[0].clientY;
-    let diff=startY-move;
-
-    if(diff>50){
-      document.getElementById("sheet").style.height="80vh";
-      document.getElementById("map").style.height="20vh";
-    }
-
-    if(diff<-50){
-      document.getElementById("sheet").style.height="50vh";
-      document.getElementById("map").style.height="45vh";
-    }
-  });
-
-  /* PWA */
-  if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("sw.js")
-      .then(()=>console.log("PWA Ready"))
-      .catch(err=>console.log(err));
-  }
-
-  let deferredPrompt;
-
-  window.addEventListener("beforeinstallprompt", (e) => {
-    e.preventDefault();
-    deferredPrompt = e;
-    document.getElementById("installBtn").style.display="block";
-  });
-
-  window.installApp = function(){
-    deferredPrompt.prompt();
-  };
-
+let deferredPrompt;
+window.addEventListener("beforeinstallprompt",(e)=>{
+  e.preventDefault();
+  deferredPrompt=e;
+  document.getElementById("installBtn").style.display="block";
 });
+
+function installApp(){
+  deferredPrompt.prompt();
+}
 </script>
 
-
-<!-- FIREBASE SAME (UNCHANGED LOGIC) -->
+<!-- FIREBASE (UNCHANGED) -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut }
@@ -499,26 +222,27 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
 
-/* LOGIN */
 window.googleLogin = async function(){
   await signInWithPopup(auth, provider);
 };
 
-/* AUTO LOGIN */
 onAuthStateChanged(auth,(user)=>{
   if(user){
     document.getElementById("loginPage").style.display="none";
     document.getElementById("app").style.display="block";
-    document.getElementById("userName").innerText = user.displayName;
-    document.getElementById("menuUser").innerText = user.displayName;
+
+    document.getElementById("userName").innerText=user.displayName;
+    document.getElementById("menuUser").innerText=user.displayName;
+    document.getElementById("menuEmail").innerText=user.email;
+
     initMap();
   }
 });
 
-/* LOGOUT */
-window.logout = function(){
+window.logout=function(){
   signOut(auth).then(()=>location.reload());
 };
 </script>
+
 </body>
 </html>
