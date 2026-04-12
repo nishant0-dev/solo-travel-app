@@ -314,7 +314,6 @@ function initMap(){
     vid.muted = true;
     vid.play().catch(()=>{});
   }
-})
 
 async function fetchPlaces(){
 
@@ -375,8 +374,6 @@ function showTab(tab){
     document.getElementById("sheet").style.display="none";
     document.getElementById("saved").style.display="block";
   }
-}
-
 function loadSaved(){
   let saved=JSON.parse(localStorage.getItem("saved"))||[];
   document.getElementById("saved").innerHTML=saved.map(p=>`<div class="card">${p}</div>`).join("");
@@ -413,7 +410,6 @@ async function suggestPlaces(q){
   document.getElementById("suggestions").innerHTML=""; // ADD THIS
   initMap();
 }
-}
   function visit(name){
   points += 10;
   localStorage.setItem("points", points);
@@ -445,7 +441,6 @@ document.getElementById("handle").addEventListener("touchmove",(e)=>{
   if(diff<-50){
     document.getElementById("sheet").style.height="50vh";
     document.getElementById("map").style.height="45vh";
-  }
 });
 </script>
   
@@ -464,7 +459,6 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
-  document.getElementById("menuUser").innerText = user.displayName;
 
 window.googleLogin = async function(){
   await signInWithPopup(auth, provider);
@@ -475,8 +469,10 @@ onAuthStateChanged(auth,(user)=>{
     document.getElementById("loginPage").style.display="none";
     document.getElementById("app").style.display="block";
     document.getElementById("userName").innerText=user.displayName;
+    
+    document.getElementById("menuUser").innerText = user.displayName; // ✅ HERE
+
     initMap();
-  }
 });
 
 window.logout=function(){
