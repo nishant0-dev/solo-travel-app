@@ -145,12 +145,28 @@ input{
 }
 
 /* LOGIN FIX */
+#loginPage{
+  position:relative;
+  height:100vh;
+  overflow:hidden;
+}
+
+/* VIDEO BACKGROUND */
 #loginPage video{
   position:absolute;
+  top:0;
+  left:0;
   width:100%;
   height:100%;
   object-fit:cover;
+  z-index:1;
   pointer-events:none;
+}
+
+/* CONTENT ABOVE VIDEO */
+#loginPage div{
+  position:relative;
+  z-index:2;
 }
 
   /* SMOOTH ANIMATION */
