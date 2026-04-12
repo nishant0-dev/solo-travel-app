@@ -441,7 +441,7 @@ document.getElementById("handle").addEventListener("touchmove",(e)=>{
   if(diff<-50){
     document.getElementById("sheet").style.height="50vh";
     document.getElementById("map").style.height="45vh";
-});
+}
 </script>
   
 
@@ -450,8 +450,9 @@ document.getElementById("handle").addEventListener("touchmove",(e)=>{
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut }
 from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
 const firebaseConfig = {
-   apiKey: "AIzaSyDlu9Xw8_Nb9sN-TCyMsjORViHQD9MQnRg",
+  apiKey: "AIzaSyDlu9Xw8_Nb9sN-TCyMsjORViHQD9MQnRg",
   authDomain: "wanderer-6b780.firebaseapp.com",
   projectId: "wanderer-6b780"
 };
@@ -460,25 +461,26 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
 
+/* LOGIN */
 window.googleLogin = async function(){
   await signInWithPopup(auth, provider);
 };
 
+/* AUTO LOGIN */
 onAuthStateChanged(auth,(user)=>{
   if(user){
     document.getElementById("loginPage").style.display="none";
     document.getElementById("app").style.display="block";
-    document.getElementById("userName").innerText=user.displayName;
-    
-    document.getElementById("menuUser").innerText = user.displayName; // ✅ HERE
-
+    document.getElementById("userName").innerText = user.displayName;
+    document.getElementById("menuUser").innerText = user.displayName;
     initMap();
-});
+  }   // ✅ THIS WAS MISSING
+});   // ✅ THIS WAS MISSING
 
-window.logout=function(){
+/* LOGOUT */
+window.logout = function(){
   signOut(auth).then(()=>location.reload());
 };
 </script>
-
 </body>
 </html>
