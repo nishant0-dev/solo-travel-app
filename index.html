@@ -314,15 +314,23 @@ button{
 
 <!-- LOGIN -->
 <div id="loginPage">
-<video autoplay muted loop playsinline id="bgVideo">
-  <source src="video.mp4" type="video/mp4">
-</video>
- <button id="installBtn" onclick="installApp()" style="display:none">Install</button>
-  
-<div style="position:relative;z-index:2;text-align:center;">
-<h2>Wanderer Pro 🌍</h2>
-<button onclick="googleLogin()">Login with Google</button>
-</div>
+
+  <!-- VIDEO -->
+  <video autoplay muted loop playsinline id="bgVideo">
+    <source src="video.mp4" type="video/mp4">
+  </video>
+
+  <!-- INSTALL BUTTON -->
+  <button id="installBtn" onclick="installApp()" style="display:none; position:absolute; top:20px; right:20px; z-index:3;">
+    Install
+  </button>
+
+  <!-- LOGIN UI -->
+  <div style="position:relative;z-index:2;text-align:center;top:40vh;">
+    <h2>Wanderer Pro 🌍</h2>
+    <button onclick="googleLogin()">Login with Google</button>
+  </div>
+
 </div>
 
 <!-- APP -->
