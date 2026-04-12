@@ -330,9 +330,6 @@ button{
 <div class="header">Wanderer Pro</div>
   <div id="profileBtn" onclick="toggleMenu()">👤</div>
 
-<!-- PROFILE BUTTON -->
-<div id="profileBtn" onclick="toggleMenu()">☰</div>
-
 <!-- OVERLAY -->
 <div id="overlay" onclick="toggleMenu()"></div>
 
@@ -510,6 +507,7 @@ function installApp(){
 
 <!-- ✅ FIREBASE (FIXED - NO NESTED SCRIPT) -->
 <script type="module">
+  window.googleLogin = function(){};
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut }
