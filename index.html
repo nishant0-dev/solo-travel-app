@@ -10,7 +10,6 @@
 <audio id="rewardSound" src="https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3"></audio>
   <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#0f172a">
-  <button id="installBtn" onclick="installApp()" style="display:none">Install App</button>
 <style>
 body{
   margin:0;
@@ -239,6 +238,75 @@ button{
   font-size:18px;
   cursor:pointer;
 }
+  /* PROFILE BUTTON */
+#profileBtn{
+  position:absolute;
+  left:15px;
+  top:15px;
+  font-size:20px;
+  cursor:pointer;
+  z-index:1100;
+}
+
+/* OVERLAY */
+#overlay{
+  position:fixed;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  background:rgba(0,0,0,0.5);
+  backdrop-filter: blur(5px);
+  opacity:0;
+  pointer-events:none;
+  transition:0.3s;
+  z-index:999;
+}
+
+/* MENU */
+#menu{
+  position:fixed;
+  left:-280px;
+  top:0;
+  width:260px;
+  height:100%;
+  background:#020617;
+  padding:20px;
+  transition:0.35s ease;
+  z-index:1000;
+  display:flex;
+  flex-direction:column;
+}
+
+/* OPEN STATE */
+#menu.open{
+  left:0;
+}
+#overlay.open{
+  opacity:1;
+  pointer-events:auto;
+}
+
+/* PROFILE TOP */
+.profile-top{
+  text-align:center;
+  margin-bottom:20px;
+}
+
+.profile-top img{
+  width:80px;
+  height:80px;
+  border-radius:50%;
+  margin-bottom:10px;
+}
+
+/* MENU ITEMS */
+.menu-items button{
+  width:100%;
+  margin:6px 0;
+  padding:10px;
+  font-size:14px;
+}
 </style>
 </head>
 
@@ -249,7 +317,7 @@ button{
 <video autoplay muted loop playsinline id="bgVideo">
   <source src="video.mp4" type="video/mp4">
 </video>
-  <button id="installBtn"...>
+ <button id="installBtn" onclick="installApp()" style="display:none">Install</button>
   
 <div style="position:relative;z-index:2;text-align:center;">
 <h2>Wanderer Pro 🌍</h2>
@@ -262,13 +330,27 @@ button{
 <div class="header">Wanderer Pro</div>
   <div id="profileBtn" onclick="toggleMenu()">👤</div>
 
-<div id="menu">
-  <h3>Menu</h3>
-  <p id="menuUser"></p>
+<!-- PROFILE BUTTON -->
+<div id="profileBtn" onclick="toggleMenu()">☰</div>
 
-  <button onclick="logout()">Logout</button>
-  <button>Settings</button>
-  <button>About</button>
+<!-- OVERLAY -->
+<div id="overlay" onclick="toggleMenu()"></div>
+
+<!-- SIDE MENU -->
+<div id="menu">
+  <div class="profile-top">
+    <img id="userPhoto" src="https://via.placeholder.com/80" />
+    <h3 id="menuUser">User</h3>
+    <p id="menuEmail">email@gmail.com</p>
+  </div>
+
+  <div class="menu-items">
+    <button onclick="showTab('explore')">🏠 Explore</button>
+    <button onclick="showTab('saved')">❤️ Saved</button>
+    <button>⚙️ Settings</button>
+    <button>ℹ️ About</button>
+    <button onclick="logout()">🚪 Logout</button>
+  </div>
 </div>
 
 <div id="userBar">
@@ -400,6 +482,7 @@ function playSound(id){
 
 function toggleMenu(){
   document.getElementById("menu").classList.toggle("open");
+  document.getElementById("overlay").classList.toggle("open");
 }
 
 /* SEARCH */
@@ -482,7 +565,7 @@ document.addEventListener("DOMContentLoaded",()=>{
 });
 
 
-<!-- FIREBASE SAME (UNCHANGED LOGIC) -->
+// FIREBASE SAME
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut }
@@ -508,8 +591,17 @@ onAuthStateChanged(auth,(user)=>{
   if(user){
     document.getElementById("loginPage").style.display="none";
     document.getElementById("app").style.display="block";
+
     document.getElementById("userName").innerText = user.displayName;
     document.getElementById("menuUser").innerText = user.displayName;
+
+    // NEW ADDITIONS
+    document.getElementById("menuEmail").innerText = user.email;
+
+    if(user.photoURL){
+      document.getElementById("userPhoto").src = user.photoURL;
+    }
+
     initMap();
   }
 });
@@ -518,6 +610,7 @@ onAuthStateChanged(auth,(user)=>{
 window.logout = function(){
   signOut(auth).then(()=>location.reload());
 };
+  </script>
 </script>
 </body>
 </html>
