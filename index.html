@@ -565,6 +565,7 @@ document.addEventListener("DOMContentLoaded",()=>{
 
 // 🔥 FIREBASE (NO <script> HERE)
 <script type="module">
+
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut }
 from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
@@ -589,10 +590,8 @@ onAuthStateChanged(auth,(user)=>{
   if(user){
     document.getElementById("loginPage").style.display="none";
     document.getElementById("app").style.display="block";
-
     document.getElementById("userName").innerText = user.displayName;
     document.getElementById("menuUser").innerText = user.displayName;
-
     document.getElementById("menuEmail").innerText = user.email;
 
     if(user.photoURL){
@@ -607,7 +606,9 @@ onAuthStateChanged(auth,(user)=>{
 window.logout = function(){
   signOut(auth).then(()=>location.reload());
 };
+
 </script>
+  
 
 </body>
 </html>
