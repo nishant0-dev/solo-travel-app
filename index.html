@@ -152,6 +152,74 @@ input{
   object-fit:cover;
   pointer-events:none;
 }
+
+  /* SMOOTH ANIMATION */
+*{
+  transition: all 0.25s ease;
+}
+
+/* GLASS HEADER */
+.header{
+  backdrop-filter: blur(10px);
+  background: rgba(0,0,0,0.4);
+}
+
+/* CARD HOVER */
+.card{
+  transform: scale(1);
+}
+.card:hover{
+  transform: scale(1.04);
+}
+
+/* BUTTON STYLE */
+button{
+  background: linear-gradient(135deg,#3b82f6,#2563eb);
+  border:none;
+  color:white;
+  border-radius:10px;
+  padding:6px 10px;
+}
+
+/* SKELETON */
+.skeleton{
+  background: linear-gradient(90deg,#1e293b 25%,#334155 50%,#1e293b 75%);
+  background-size:200% 100%;
+  animation: shimmer 1.5s infinite;
+  height:180px;
+  border-radius:12px;
+}
+
+@keyframes shimmer{
+  0%{background-position:-200% 0}
+  100%{background-position:200% 0}
+}
+
+/* SIDE MENU */
+#menu{
+  position:fixed;
+  right:-250px;
+  top:0;
+  width:250px;
+  height:100%;
+  background:#020617;
+  padding:20px;
+  transition:0.3s;
+  z-index:1000;
+}
+
+#menu.open{
+  right:0;
+}
+
+/* PROFILE BTN */
+#profileBtn{
+  position:absolute;
+  right:15px;
+  top:15px;
+  font-size:18px;
+  cursor:pointer;
+}
 </style>
 </head>
 
@@ -172,6 +240,16 @@ input{
 <!-- APP -->
 <div id="app" style="display:none;">
 <div class="header">Wanderer Pro</div>
+  <div id="profileBtn" onclick="toggleMenu()">👤</div>
+
+<div id="menu">
+  <h3>Menu</h3>
+  <p id="menuUser"></p>
+
+  <button onclick="logout()">Logout</button>
+  <button>Settings</button>
+  <button>About</button>
+</div>
 
 <div id="userBar">
   <div id="userName">👤 User</div>
@@ -223,6 +301,15 @@ function initMap(){
 })
 
 async function fetchPlaces(){
+
+  document.getElementById("places").innerHTML = `
+    <div class="grid">
+      <div class="skeleton"></div>
+      <div class="skeleton"></div>
+      <div class="skeleton"></div>
+      <div class="skeleton"></div>
+    </div>
+  `;
   const res=await fetch(`https://api.geoapify.com/v2/places?categories=tourism.sights,catering.restaurant&filter=circle:${userLon},${userLat},3000&limit=10&apiKey=${API_KEY}`);
   const data=await res.json();
 
@@ -265,9 +352,13 @@ function savePlace(name){
   }
 }
 function showTab(tab){
-  document.getElementById("sheet").style.display=tab==="explore"?"block":"none";
-  document.getElementById("saved").style.display=tab==="saved"?"block":"block";
-  loadSaved();
+  if(tab==="explore"){
+    document.getElementById("sheet").style.display="block";
+    document.getElementById("saved").style.display="none";
+  }else{
+    document.getElementById("sheet").style.display="none";
+    document.getElementById("saved").style.display="block";
+  }
 }
 
 function loadSaved(){
@@ -280,6 +371,9 @@ function playSound(id){
 
   sound.currentTime = 0;
   sound.play().catch(()=>{}); // prevents crash
+}
+  function toggleMenu(){
+  document.getElementById("menu").classList.toggle("open");
 }
   
 /* SEARCH SUGGEST */
@@ -297,10 +391,12 @@ async function suggestPlaces(q){
   document.getElementById("suggestions").innerHTML=html;
 }
 
-function selectPlace(lat,lon){
+  function selectPlace(lat,lon){
   userLat=lat;
   userLon=lon;
+  document.getElementById("suggestions").innerHTML=""; // ADD THIS
   initMap();
+}
 }
   function visit(name){
   points += 10;
@@ -314,6 +410,26 @@ function selectPlace(lat,lon){
 /* MAP SHRINK */
 document.getElementById("sheet").addEventListener("scroll",()=>{
   document.getElementById("map").style.height="30vh";
+});
+  let startY=0;
+
+document.getElementById("handle").addEventListener("touchstart",(e)=>{
+  startY=e.touches[0].clientY;
+});
+
+document.getElementById("handle").addEventListener("touchmove",(e)=>{
+  let move=e.touches[0].clientY;
+  let diff=startY-move;
+
+  if(diff>50){
+    document.getElementById("sheet").style.height="80vh";
+    document.getElementById("map").style.height="20vh";
+  }
+
+  if(diff<-50){
+    document.getElementById("sheet").style.height="50vh";
+    document.getElementById("map").style.height="45vh";
+  }
 });
 </script>
   
@@ -332,6 +448,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
+  document.getElementById("menuUser").innerText = user.displayName;
 
 window.googleLogin = async function(){
   await signInWithPopup(auth, provider);
