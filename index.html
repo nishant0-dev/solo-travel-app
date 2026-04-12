@@ -10,6 +10,7 @@
 <audio id="rewardSound" src="https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3"></audio>
   <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#0f172a">
+  <button id="installBtn" onclick="installApp()" style="display:none">Install App</button>
 <style>
 body{
   margin:0;
@@ -454,6 +455,23 @@ document.getElementById("handle").addEventListener("touchmove",(e)=>{
     document.getElementById("map").style.height="45vh";
   }
 });
+  if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("sw.js")
+    .then(()=>console.log("PWA Ready"))
+    .catch(err=>console.log(err));
+}
+  
+  let deferredPrompt;
+
+window.addEventListener("beforeinstallprompt", (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  document.getElementById("installBtn").style.display="block";
+});
+
+function installApp(){
+  deferredPrompt.prompt();
+}
 </script>
   
 
@@ -494,12 +512,7 @@ window.logout = function(){
   signOut(auth).then(()=>location.reload());
 };
   <script>
-if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("sw.js")
-    .then(()=>console.log("PWA Ready"))
-    .catch(err=>console.log(err));
-}
-</script>
+
 </script>
 </body>
 </html>
