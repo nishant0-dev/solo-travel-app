@@ -595,7 +595,6 @@ onAuthStateChanged(auth,(user)=>{
     document.getElementById("userName").innerText = user.displayName;
     document.getElementById("menuUser").innerText = user.displayName;
 
-    // NEW ADDITIONS
     document.getElementById("menuEmail").innerText = user.email;
 
     if(user.photoURL){
@@ -610,7 +609,7 @@ onAuthStateChanged(auth,(user)=>{
 window.logout = function(){
   signOut(auth).then(()=>location.reload());
 };
-  </script>
 </script>
+
 </body>
 </html>
