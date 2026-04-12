@@ -393,14 +393,13 @@ function initMap(){
   fetchPlaces();
 }
 
+/* BASIC LOAD */
 document.addEventListener("DOMContentLoaded", () => {
-
   const vid = document.getElementById("bgVideo");
   if (vid) {
     vid.muted = true;
     vid.play().catch(()=>{});
   }
-
 });
 
 /* FETCH */
@@ -441,7 +440,6 @@ async function fetchPlaces(){
   document.getElementById("places").innerHTML=html;
 }
 
-/* FUNCTIONS */
 function direction(lat,lon){
   window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}`);
 }
@@ -451,7 +449,6 @@ function savePlace(name){
   if(!saved.includes(name)){
     saved.push(name);
     localStorage.setItem("saved", JSON.stringify(saved));
-    playSound("saveSound");
   }
 }
 
@@ -465,105 +462,14 @@ function showTab(tab){
   }
 }
 
-function loadSaved(){
-  let saved=JSON.parse(localStorage.getItem("saved"))||[];
-  document.getElementById("saved").innerHTML=
-    saved.map(p=>`<div class="card">${p}</div>`).join("");
-}
-
-function playSound(id){
-  const sound = document.getElementById(id);
-  if(!sound) return;
-  sound.currentTime = 0;
-  sound.play().catch(()=>{});
-}
-
 function toggleMenu(){
   document.getElementById("menu").classList.toggle("open");
   document.getElementById("overlay").classList.toggle("open");
 }
-
-/* SEARCH */
-async function suggestPlaces(q){
-  if(q.length<2) return;
-
-  const res=await fetch(`https://api.geoapify.com/v1/geocode/autocomplete?text=${q}&apiKey=${API_KEY}`);
-  const data=await res.json();
-
-  let html="";
-  data.features.forEach(p=>{
-    html+=`<div onclick="selectPlace(${p.properties.lat},${p.properties.lon})">${p.properties.formatted}</div>`;
-  });
-
-  document.getElementById("suggestions").innerHTML=html;
-}
-
-function selectPlace(lat,lon){
-  userLat=lat;
-  userLon=lon;
-  document.getElementById("suggestions").innerHTML="";
-  initMap();
-}
-
-function visit(name){
-  points += 10;
-  localStorage.setItem("points", points);
-  playSound("rewardSound");
-  alert("🎉 Visited " + name);
-}
+</script>
 
 
-/* MAP SCROLL + PWA */
-document.addEventListener("DOMContentLoaded",()=>{
-
-  document.getElementById("sheet").addEventListener("scroll",()=>{
-    document.getElementById("map").style.height="30vh";
-  });
-
-  let startY=0;
-
-  document.getElementById("handle").addEventListener("touchstart",(e)=>{
-    startY=e.touches[0].clientY;
-  });
-
-  document.getElementById("handle").addEventListener("touchmove",(e)=>{
-    let move=e.touches[0].clientY;
-    let diff=startY-move;
-
-    if(diff>50){
-      document.getElementById("sheet").style.height="80vh";
-      document.getElementById("map").style.height="20vh";
-    }
-
-    if(diff<-50){
-      document.getElementById("sheet").style.height="50vh";
-      document.getElementById("map").style.height="45vh";
-    }
-  });
-
-  /* PWA */
-  if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("sw.js")
-      .then(()=>console.log("PWA Ready"))
-      .catch(err=>console.log(err));
-  }
-
-  let deferredPrompt;
-
-  window.addEventListener("beforeinstallprompt", (e) => {
-    e.preventDefault();
-    deferredPrompt = e;
-    document.getElementById("installBtn").style.display="block";
-  });
-
-  window.installApp = function(){
-    deferredPrompt.prompt();
-  };
-
-});
-
-
-// 🔥 FIREBASE (NO <script> HERE)
+<!-- ✅ FIREBASE (FIXED - NO NESTED SCRIPT) -->
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -580,16 +486,20 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
 
-/* LOGIN */
+/* ✅ MAKE GLOBAL */
 window.googleLogin = async function(){
   await signInWithPopup(auth, provider);
 };
 
-/* AUTO LOGIN */
+window.logout = function(){
+  signOut(auth).then(()=>location.reload());
+};
+
 onAuthStateChanged(auth,(user)=>{
   if(user){
     document.getElementById("loginPage").style.display="none";
     document.getElementById("app").style.display="block";
+
     document.getElementById("userName").innerText = user.displayName;
     document.getElementById("menuUser").innerText = user.displayName;
     document.getElementById("menuEmail").innerText = user.email;
@@ -602,13 +512,6 @@ onAuthStateChanged(auth,(user)=>{
   }
 });
 
-/* LOGOUT */
-window.logout = function(){
-  signOut(auth).then(()=>location.reload());
-};
-
 </script>
-  
-
 </body>
 </html>
