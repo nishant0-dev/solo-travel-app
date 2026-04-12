@@ -5,13 +5,12 @@
 <title>Wanderer Pro</title>
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-<audio id="loginSound" src="https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3"></audio>
-<audio id="saveSound" src="https://assets.mixkit.co/active_storage/sfx/270/270-preview.mp3"></audio>
-<audio id="rewardSound" src="https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3"></audio>
+
   <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#0f172a">
 <style>
 body{
+
   margin:0;
   font-family:system-ui;
   background:#0b1220;
@@ -301,6 +300,9 @@ button{
 </head>
 
 <body>
+  <audio id="loginSound" src="https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3"></audio>
+<audio id="saveSound" src="https://assets.mixkit.co/active_storage/sfx/270/270-preview.mp3"></audio>
+<audio id="rewardSound" src="https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3"></audio>
 
 <!-- LOGIN -->
 <div id="loginPage">
@@ -465,6 +467,43 @@ function showTab(tab){
 function toggleMenu(){
   document.getElementById("menu").classList.toggle("open");
   document.getElementById("overlay").classList.toggle("open");
+}
+  // ✅ ADD MISSING FUNCTIONS
+
+async function suggestPlaces(q){
+  if(q.length<2) return;
+
+  try{
+    const res = await fetch(`https://api.geoapify.com/v1/geocode/autocomplete?text=${q}&apiKey=${API_KEY}`);
+    const data = await res.json();
+
+    let html="";
+    data.features.forEach(p=>{
+      html += `<div onclick="selectPlace(${p.properties.lat},${p.properties.lon})">
+        ${p.properties.formatted}
+      </div>`;
+    });
+
+    document.getElementById("suggestions").innerHTML = html;
+  }catch(e){}
+}
+
+function selectPlace(lat,lon){
+  userLat = lat;
+  userLon = lon;
+  document.getElementById("suggestions").innerHTML = "";
+  initMap();
+}
+
+function playSound(id){
+  const sound = document.getElementById(id);
+  if(!sound) return;
+  sound.currentTime = 0;
+  sound.play().catch(()=>{});
+}
+
+function installApp(){
+  alert("Install triggered");
 }
 </script>
 
