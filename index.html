@@ -8,60 +8,65 @@
 
   <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#0f172a">
-<style>
-body{
+  <style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
+:root{
+  --bg:#0b1220;
+  --card:#111827;
+  --glass:rgba(255,255,255,0.06);
+  --accent:#3b82f6;
+  --accent2:#22c55e;
+  --text:#e2e8f0;
+}
+
+body{
   margin:0;
-  font-family:system-ui;
-  background:#0b1220;
-  color:white;
+  font-family:'Inter',system-ui;
+  background:linear-gradient(180deg,#020617,#0b1220);
+  color:var(--text);
   overflow:hidden;
 }
-.actions{
-  display:flex;
-  gap:6px;
-  margin-top:5px;
+
+*{
+  transition:all 0.25s cubic-bezier(.4,0,.2,1);
 }
 
-.actions button{
-  flex:1;
-  font-size:12px;
-  padding:6px;
-  border-radius:8px;
-}
 /* HEADER */
 .header{
-  text-align:center;
-  padding:12px;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  padding:14px;
   font-size:20px;
   font-weight:600;
-}
-
-/* USER BAR */
-#userBar{
-  display:flex;
-  justify-content:space-between;
-  padding:10px 15px;
-  font-size:14px;
-  color:#94a3b8;
+  backdrop-filter:blur(16px);
+  background:var(--glass);
+  position:sticky;
+  top:0;
+  z-index:1000;
 }
 
 /* SEARCH */
 input{
-  width:92%;
-  margin:10px auto;
-  display:block;
-  padding:12px;
-  border-radius:12px;
+  width:90%;
+  margin:12px auto;
+  padding:14px;
+  border-radius:16px;
   border:none;
-  background:#1e293b;
+  background:var(--card);
   color:white;
+  box-shadow:
+    inset 2px 2px 6px rgba(0,0,0,0.6),
+    inset -2px -2px 6px rgba(255,255,255,0.05);
 }
 
 /* MAP */
 #map{
-  height:45vh;
-  transition:0.3s;
+  height:38vh;
+  border-radius:20px;
+  margin:0 10px;
+  box-shadow:0 10px 40px rgba(0,0,0,0.6);
 }
 
 /* SHEET */
@@ -69,129 +74,48 @@ input{
   position:fixed;
   bottom:0;
   width:100%;
-  height:50vh;
-  background:#020617;
-  border-radius:20px 20px 0 0;
+  height:55vh;
+  background:linear-gradient(180deg,#020617,#020617dd);
+  border-radius:30px 30px 0 0;
   overflow:auto;
-  padding:10px;
-}
-
-/* HANDLE */
-#handle{
-  width:50px;
-  height:5px;
-  background:#475569;
-  margin:5px auto;
-  border-radius:10px;
-}
-  #suggestions{
-  width:92%;
-  margin:auto;
-  background:#1e293b;
-  border-radius:10px;
-  max-height:200px;
-  overflow:auto;
-}
-
-#suggestions div{
-  padding:10px;
-  border-bottom:1px solid #334155;
-  cursor:pointer;
-}
-
-#suggestions div:hover{
-  background:#334155;
+  padding:16px;
+  backdrop-filter:blur(20px);
 }
 
 /* GRID */
 .grid{
   display:grid;
   grid-template-columns:1fr 1fr;
-  gap:10px;
+  gap:14px;
 }
 
 /* CARD */
 .card{
-  background:#1e293b;
-  border-radius:16px;
+  background:var(--card);
+  border-radius:20px;
   overflow:hidden;
-  box-shadow:0 8px 20px rgba(0,0,0,0.4);
-  transition:0.2s;
+  box-shadow:
+    0 10px 30px rgba(0,0,0,0.6),
+    inset 0 1px 0 rgba(255,255,255,0.05);
 }
 
 .card:hover{
-  transform:translateY(-4px);
+  transform:translateY(-8px) scale(1.02);
 }
+
 .card img{
   width:100%;
   height:160px;
   object-fit:cover;
-  border-radius:12px 12px 0 0;
 }
 
 .card-content{
-  padding:8px;
-  font-size:13px;
-}
-
-/* NAV */
-.nav{
-  position:fixed;
-  bottom:0;
-  width:100%;
-  display:flex;
-  justify-content:space-around;
-  background:#020617;
   padding:10px;
 }
 
-/* LOGIN FIX */
-#loginPage{
-  position:relative;
-  height:100vh;
-  overflow:hidden;
-}
-
-/* VIDEO BACKGROUND */
-#loginPage video{
-  position:absolute;
-  top:0;
-  left:0;
-  width:100%;
-  height:100%;
-  object-fit:cover;
-  z-index:1;
-  pointer-events:none;
-}
-
-/* CONTENT ABOVE VIDEO */
-#loginPage div{
-  position:relative;
-  z-index:2;
-}
-
-  /* SMOOTH ANIMATION */
-*{
-  transition: all 0.25s ease;
-}
-
-/* GLASS HEADER */
-.header{
-  backdrop-filter: blur(10px);
-  background: rgba(0,0,0,0.4);
-}
-
-/* CARD HOVER */
-.card{
-  transform: scale(1);
-}
-.card:hover{
-  transform: scale(1.04);
-}
-
-/* BUTTON STYLE */
+/* BUTTON */
 button{
-  background: linear-gradient(135deg,#3b82f6,#2563eb);
+  background:linear-gradient(135deg,#2563eb,#1d4ed8);
   border:none;
   color:white;
   border-radius:10px;
@@ -200,178 +124,191 @@ button{
 
 /* SKELETON */
 .skeleton{
-  background: linear-gradient(90deg,#1e293b 25%,#334155 50%,#1e293b 75%);
-  background-size:200% 100%;
-  animation: shimmer 1.5s infinite;
   height:180px;
-  border-radius:12px;
+  border-radius:16px;
+  background:linear-gradient(90deg,#1e293b 25%,#334155 50%,#1e293b 75%);
+  background-size:200% 100%;
+  animation:shimmer 1.2s infinite;
 }
 
 @keyframes shimmer{
-  0%{background-position:-200% 0}
-  100%{background-position:200% 0}
+  0%{background-position:-200%}
+  100%{background-position:200%}
 }
 
-/* SIDE MENU */
-#menu{
+/* INSTALL BUTTON */
+#installBtn{
   position:fixed;
-  right:-250px;
-  top:0;
-  width:250px;
-  height:100%;
-  background:#020617;
-  padding:20px;
-  transition:0.3s;
-  z-index:1000;
-}
-
-#menu.open{
-  right:0;
-}
-
-/* PROFILE BTN */
-#profileBtn{
-  position:absolute;
+  bottom:80px;
   right:15px;
-  top:15px;
-  font-size:18px;
-  cursor:pointer;
+  padding:12px 16px;
+  border-radius:20px;
+  background:linear-gradient(135deg,#22c55e,#16a34a);
+  box-shadow:0 10px 30px rgba(0,0,0,0.5);
+  display:none;
 }
-/* OVERLAY */
-#overlay{
-  position:fixed;
-  top:0;
-  left:0;
-  width:100%;
-  height:100%;
-  background:rgba(0,0,0,0.5);
-  backdrop-filter: blur(5px);
-  opacity:0;
-  pointer-events:none;
-  transition:0.3s;
-  z-index:999;
-}
-
-/* MENU */
-#menu{
-  position:fixed;
-  left:-280px;
-  top:0;
-  width:260px;
-  height:100%;
-  background:#020617;
-  padding:20px;
-  transition:0.35s ease;
-  z-index:1000;
-  display:flex;
-  flex-direction:column;
-}
-
-/* OPEN STATE */
-#menu.open{
-  left:0;
-}
-#overlay.open{
-  opacity:1;
-  pointer-events:auto;
-}
-
-/* PROFILE TOP */
-.profile-top{
+    /* LOGIN BOX */
+.login-box{
+  position:absolute;
+  top:45%;
+  left:50%;
+  transform:translate(-50%,-50%);
   text-align:center;
-  margin-bottom:20px;
+  background:rgba(0,0,0,0.4);
+  padding:25px;
+  border-radius:20px;
+  backdrop-filter:blur(10px);
 }
 
-.profile-top img{
-  width:80px;
-  height:80px;
-  border-radius:50%;
-  margin-bottom:10px;
+/* HEADER */
+.header{
+  display:flex;
+  justify-content:space-between;
+  padding:12px 16px;
+  align-items:center;
 }
 
-/* MENU ITEMS */
-.menu-items button{
-  width:100%;
-  margin:6px 0;
+.header-right{
+  display:flex;
+  gap:10px;
+  align-items:center;
+}
+
+/* SEARCH + LOCATION */
+.top-controls{
+  display:flex;
+  gap:8px;
+  width:92%;
+  margin:10px auto;
+}
+
+.top-controls input{
+  flex:1;
+}
+
+.loc-btn{
   padding:10px;
-  font-size:14px;
+  border-radius:12px;
+}
+
+/* MAP IMPROVE */
+#map{
+  position:relative;
+}
+
+/* NAV ICONS */
+.nav button{
+  font-size:18px;
+}
+
+/* INSTALL BTN */
+#installBtn{
+  position:fixed;
+  bottom:90px;
+  right:15px;
+  z-index:1000;
+  padding:12px;
+  border-radius:20px;
+}
+
+/* MENU DEPTH */
+#menu{
+  box-shadow:0 0 40px rgba(0,0,0,0.8);
+}
+
+/* PROFILE IMAGE */
+.profile-top img{
+  border:3px solid #3b82f6;
 }
 </style>
 </head>
 
 <body>
-  <audio id="loginSound" src="https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3"></audio>
+
+<!-- AUDIO -->
+<audio id="loginSound" src="https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3"></audio>
 <audio id="saveSound" src="https://assets.mixkit.co/active_storage/sfx/270/270-preview.mp3"></audio>
 <audio id="rewardSound" src="https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3"></audio>
 
+<!-- FLOATING INSTALL BUTTON -->
+<button id="installBtn">📲 Install</button>
 
-  <!-- INSTALL BUTTON -->
-  <button id="installBtn" onclick="installApp()" style="display:none; position:absolute; top:20px; right:20px; z-index:3;">
-    Install
-  </button>
-
- <!-- LOGIN -->
+<!-- LOGIN PAGE -->
 <div id="loginPage">
   <video autoplay muted loop playsinline id="bgVideo">
     <source src="video.mp4" type="video/mp4">
   </video>
 
-  <div style="position:relative;z-index:2;text-align:center;top:40vh;">
-    <h2>Wanderer Pro 🌍</h2>
+  <div class="login-box">
+    <h2>🌍 Wanderer Pro</h2>
     <button onclick="googleLogin()">Login with Google</button>
   </div>
 </div>
 
-<!-- APP -->
+<!-- MAIN APP -->
 <div id="app" style="display:none;">
-<div class="header">Wanderer Pro</div>
- <div id="profileBtn" onclick="toggleMenu()">☰</div>
 
-<!-- OVERLAY -->
-<div id="overlay" onclick="toggleMenu()"></div>
-
-<!-- SIDE MENU -->
-<div id="menu">
-  <div class="profile-top">
-    <img id="userPhoto" src="https://via.placeholder.com/80" />
-    <h3 id="menuUser">User</h3>
-    <p id="menuEmail">email@gmail.com</p>
+  <!-- PREMIUM HEADER -->
+  <div class="header">
+    <div class="title">Wanderer</div>
+    <div class="header-right">
+      <span id="userPoints">⭐ 0</span>
+      <div id="profileBtn" onclick="toggleMenu()">☰</div>
+    </div>
   </div>
 
-  <div class="menu-items">
-    <button onclick="showTab('explore')">🏠 Explore</button>
-    <button onclick="showTab('saved')">❤️ Saved</button>
-    <button>⚙️ Settings</button>
-    <button>ℹ️ About</button>
-    <button onclick="logout()">🚪 Logout</button>
+  <!-- OVERLAY -->
+  <div id="overlay" onclick="toggleMenu()"></div>
+
+  <!-- SIDE MENU -->
+  <div id="menu">
+    <div class="profile-top">
+      <img id="userPhoto" src="https://via.placeholder.com/80" />
+      <h3 id="menuUser">User</h3>
+      <p id="menuEmail">email@gmail.com</p>
+    </div>
+
+    <div class="menu-items">
+      <button onclick="showTab('explore')">🏠 Explore</button>
+      <button onclick="showTab('saved')">❤️ Saved</button>
+      <button>⚙️ Settings</button>
+      <button>ℹ️ About</button>
+      <button onclick="logout()">🚪 Logout</button>
+    </div>
   </div>
-</div>
 
-<div id="userBar">
-  <div id="userName">👤 User</div>
-  <div id="userPoints">⭐ 0</div>
-</div>
+  <!-- SEARCH + LOCATION -->
+  <div class="top-controls">
+    <input id="searchInput" placeholder="Search places..." oninput="suggestPlaces(this.value)">
+    <button class="loc-btn" onclick="getLocation()">📍</button>
+  </div>
 
-<input id="searchInput" placeholder="Search..." oninput="suggestPlaces(this.value)">
-<div id="suggestions"></div>
+  <!-- SUGGESTIONS -->
+  <div id="suggestions"></div>
 
-<div id="map"></div>
+  <!-- MAP -->
+  <div id="map"></div>
 
-<div id="sheet">
-<div id="handle"></div>
-<div id="places"></div>
-</div>
+  <!-- BOTTOM SHEET -->
+  <div id="sheet">
+    <div id="handle"></div>
+    <div id="places"></div>
+  </div>
 
-<div id="saved" style="display:none"></div>
+  <!-- SAVED TAB -->
+  <div id="saved" style="display:none"></div>
 
-<div class="nav">
-<button onclick="showTab('explore')">Explore</button>
-<button onclick="showTab('saved')">Saved</button>
-</div>
+  <!-- NAVBAR -->
+  <div class="nav">
+    <button onclick="showTab('explore')">🏠</button>
+    <button onclick="showTab('saved')">❤️</button>
+  </div>
+
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
+</body>
 <script>
 const API_KEY="11246f50749e4f76b6d69ff9bb749313";
 
@@ -495,10 +432,30 @@ function playSound(id){
   sound.currentTime = 0;
   sound.play().catch(()=>{});
 }
+  let deferredPrompt;
 
-function installApp(){
-  alert("Install triggered");
-}
+document.addEventListener("DOMContentLoaded", () => {
+
+  const installBtn = document.getElementById("installBtn");
+
+  window.addEventListener("beforeinstallprompt", (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+
+    installBtn.style.display = "block";
+  });
+
+  installBtn.addEventListener("click", async () => {
+    if (!deferredPrompt) return;
+
+    deferredPrompt.prompt();
+
+    const { outcome } = await deferredPrompt.userChoice;
+    console.log("Install result:", outcome);
+
+    deferredPrompt = null;
+    installBtn.style.display = "none";
+  });
 </script>
 
 
