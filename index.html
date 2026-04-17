@@ -2,12 +2,11 @@
 <!-- redeploy -->
 <html>
 <head>
+ <link rel="manifest" href="./manifest.json">
 <meta charset="UTF-8">
 <title>Wanderer Pro</title>
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-
- <link rel="manifest" href="/manifest.json">
 <meta name="theme-color" content="#0f172a">
   <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
@@ -498,6 +497,28 @@ onAuthStateChanged(auth,(user)=>{
 window.logout = function(){
   signOut(auth).then(()=>location.reload());
 };
+</script>
+
+ <script>
+
+
+function getLocation(){
+  if (!navigator.geolocation) {
+    alert("Geolocation not supported");
+    return;
+  }
+
+  navigator.geolocation.getCurrentPosition((pos)=>{
+    userLat = pos.coords.latitude;
+    userLon = pos.coords.longitude;
+
+    if (typeof initMap === "function") {
+      initMap();
+    }
+  }, (err)=>{
+    alert("Location permission denied");
+  });
+}
 </script>
 
 </body>
