@@ -371,6 +371,11 @@ button:active{
   transform:scale(1.02);
   transition:all var(--dur-fast) var(--ease-soft);
 }
+    #bgVideo{
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+}
 </style>
 </head>
 
@@ -802,15 +807,26 @@ document.addEventListener("click", function(e){
 
 <script>
 const app = firebase.initializeApp({
-  apiKey: "AIzaSyDlu9Xw8_Nb9sN-TCyMsjORViHQD9MQnRg",
-  authDomain: "wanderer-6b780.firebaseapp.com",
+ apiKey: "AIzaSyDlu9Xw8_Nb9sN-TCyMsjORViHQD9MQnRg",
+    authDomain: "wanderer-6b780.firebaseapp.com",
+    projectId: "wanderer-6b780",
+    storageBucket: "wanderer-6b780.firebasestorage.app",
+    messagingSenderId: "333975351570",
+    appId: "1:333975351570:web:941fbfde1b8d8a9fe303cb"
 });
 
 const auth = firebase.auth();
 
-function googleLogin(){
+window.googleLogin = function(){
   const provider = new firebase.auth.GoogleAuthProvider();
-  auth.signInWithPopup(provider);
+
+  auth.signInWithPopup(provider)
+    .then(result=>{
+      console.log("Login success", result.user);
+    })
+    .catch(err=>{
+      console.error("Login error", err);
+    });
 }
 </script>
 
