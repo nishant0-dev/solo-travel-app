@@ -131,10 +131,6 @@ input{
   background:#334155;
   border-radius:10px;
   margin:0 auto 10px;
-    <div id="sheet">
-  <div id="dragHandle"></div>
-  <div id="places"></div>
-</div>
 }
 /* ===== GRID ===== */
 .grid{
@@ -446,7 +442,7 @@ button:active{
 
   <!-- BOTTOM SHEET -->
   <div id="sheet">
-    <div id="handle"></div>
+<div id="dragHandle"></div>
     <div id="places"></div>
   </div>
 
@@ -483,11 +479,7 @@ function updateMapScale(val){
   let scale = 1 - (val / window.innerHeight) * 0.05;
   map.style.transform = `scale(${scale})`;
 }
- try{
-  const res = await fetch(url);
-  if(!res.ok) throw new Error();
-  const data = await res.json();
-}catch(e){
+ 
   document.getElementById("places").innerHTML = "⚠️ Failed to load";
 }
   fetchPlaces();
@@ -660,92 +652,94 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 </script>
  <script>
-const sheet = document.getElementById("sheet");
-const handle = document.getElementById("dragHandle");
+document.addEventListener("DOMContentLoaded", ()=>{
 
-let startY = 0;
-let currentY = 0;
-let lastY = 0;
-let velocity = 0;
-let isDragging = false;
-let currentTranslate = window.innerHeight * 0.5;
+  const sheet = document.getElementById("sheet");
+  const handle = document.getElementById("dragHandle");
 
-// snap positions
-const snapPoints = {
-  full: 0,
-  mid: window.innerHeight * 0.4,
-  collapsed: window.innerHeight * 0.75
-};
+  if(!sheet || !handle){
+    console.error("DOM not found");
+    return;
+  }
 
-// init position
-sheet.style.transform = `translateY(${snapPoints.mid}px)`;
+  let startY = 0;
+  let currentY = 0;
+  let lastY = 0;
+  let velocity = 0;
+  let isDragging = false;
+  let currentTranslate = window.innerHeight * 0.5;
 
-// START
-handle.addEventListener("mousedown", startDrag);
-handle.addEventListener("touchstart", startDrag);
+  const snapPoints = {
+    full: 0,
+    mid: window.innerHeight * 0.4,
+    collapsed: window.innerHeight * 0.75
+  };
 
-function startDrag(e){
-  isDragging = true;
-  startY = getY(e);
-  lastY = startY;
-  velocity = 0;
+  sheet.style.transform = `translateY(${snapPoints.mid}px)`;
 
-  sheet.style.transition = "none";
+  handle.addEventListener("mousedown", startDrag);
+  handle.addEventListener("touchstart", startDrag);
 
-  document.addEventListener("mousemove", onDrag);
-  document.addEventListener("touchmove", onDrag, { passive:false });
+  function startDrag(e){
+    isDragging = true;
+    startY = getY(e);
+    lastY = startY;
+    velocity = 0;
 
-  document.addEventListener("mouseup", endDrag);
-  document.addEventListener("touchend", endDrag);
-}
+    sheet.style.transition = "none";
 
-// DRAGGING
-function onDrag(e){
-  if(!isDragging) return;
-  e.preventDefault();
+    document.addEventListener("mousemove", onDrag);
+    document.addEventListener("touchmove", onDrag, { passive:false });
 
-  currentY = getY(e);
-  let delta = currentY - startY;
+    document.addEventListener("mouseup", endDrag);
+    document.addEventListener("touchend", endDrag);
+  }
 
-  // velocity calc
-  velocity = currentY - lastY;
-  lastY = currentY;
+  function onDrag(e){
+    if(!isDragging) return;
+    e.preventDefault();
 
-  let next = currentTranslate + delta;
+    currentY = getY(e);
+    let delta = currentY - startY;
 
-  // limits
-  next = Math.max(snapPoints.full, Math.min(snapPoints.collapsed, next));
- updateEffects(next);
+    velocity = currentY - lastY;
+    lastY = currentY;
 
-  sheet.style.transform = `translateY(${next}px)`;
-}
+    let next = currentTranslate + delta;
 
-// END DRAG
-function endDrag(){
-  isDragging = false;
+    next = Math.max(snapPoints.full, Math.min(snapPoints.collapsed, next));
 
-  sheet.style.transition = "transform 0.35s cubic-bezier(.22,1,.36,1)";
+    updateEffects(next);
 
-  let final = getNearestSnap(currentTranslate + (currentY - startY) + velocity * 5);
+    sheet.style.transform = `translateY(${next}px)`;
+  }
 
-  currentTranslate = final;
-  sheet.style.transform = `translateY(${final}px)`;
+  function endDrag(){
+    isDragging = false;
 
-  document.removeEventListener("mousemove", onDrag);
-  document.removeEventListener("touchmove", onDrag);
-}
+    sheet.style.transition = "transform 0.35s cubic-bezier(.22,1,.36,1)";
 
-// HELPERS
-function getY(e){
-  return e.touches ? e.touches[0].clientY : e.clientY;
-}
+    let final = getNearestSnap(currentTranslate + (currentY - startY) + velocity * 5);
 
-function getNearestSnap(pos){
-  const points = Object.values(snapPoints);
-  return points.reduce((prev, curr) => 
-    Math.abs(curr - pos) < Math.abs(prev - pos) ? curr : prev
-  );
-}
+    currentTranslate = final;
+    sheet.style.transform = `translateY(${final}px)`;
+
+    document.removeEventListener("mousemove", onDrag);
+    document.removeEventListener("touchmove", onDrag);
+  }
+
+  function getY(e){
+    return e.touches ? e.touches[0].clientY : e.clientY;
+  }
+
+  function getNearestSnap(pos){
+    const points = Object.values(snapPoints);
+    return points.reduce((prev, curr) => 
+      Math.abs(curr - pos) < Math.abs(prev - pos) ? curr : prev
+    );
+  }
+
+});
 function updateEffects(val){
   const map = document.getElementById("map");
   const backdrop = document.getElementById("backdrop");
@@ -791,63 +785,20 @@ document.addEventListener("click", function(e){
 
 
 <!-- FIREBASE -->
-<script type="module">
-import { 
-  initializeApp, 
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 
-import { 
-  getAuth, 
-  GoogleAuthProvider, 
-  signInWithPopup, 
-  onAuthStateChanged, 
-  signOut 
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-
-const app = initializeApp({
+<script>
+const app = firebase.initializeApp({
   apiKey: "AIzaSyDlu9Xw8_Nb9sN-TCyMsjORViHQD9MQnRg",
   authDomain: "wanderer-6b780.firebaseapp.com",
-  projectId: "wanderer-6b780"
 });
 
-const auth = getAuth(app);
-const provider = new GoogleAuthProvider();
+const auth = firebase.auth();
 
-window.googleLogin = async ()=>{
-  await signInWithPopup(auth, provider);
-};
-
-onAuthStateChanged(auth,(user)=>{
-  if(user){
-    document.getElementById("loginPage").style.display="none";
-    document.getElementById("app").style.display="block";
-    initMap();
-  }
-});
-window.logout = function(){
-  signOut(auth).then(()=>location.reload());
-};
-</script>
-
- <script>
-
-
-function getLocation(){
-  if (!navigator.geolocation) {
-    alert("Geolocation not supported");
-    return;
-  }
-
-  navigator.geolocation.getCurrentPosition((pos)=>{
-    userLat = pos.coords.latitude;
-    userLon = pos.coords.longitude;
-
-    if (typeof initMap === "function") {
-      initMap();
-    }
-  }, (err)=>{
-    alert("Location permission denied");
-  });
+function googleLogin(){
+  const provider = new firebase.auth.GoogleAuthProvider();
+  auth.signInWithPopup(provider);
 }
 </script>
 
