@@ -396,7 +396,7 @@ button:active{
 
   <div class="login-box">
     <h2>🌍 Wanderer Pro</h2>
-    <button onclick="googleLogin()">Login with Google</button>
+<button onclick="window.googleLogin && googleLogin()">Login</button>
   </div>
 </div>
 
@@ -791,7 +791,7 @@ document.addEventListener("click", function(e){
 
 
 <!-- FIREBASE -->
-<script type="module">
+<script>
 import { 
   initializeApp, 
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
