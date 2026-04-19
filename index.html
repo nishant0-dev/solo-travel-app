@@ -472,11 +472,14 @@ const API_KEY="11246f50749e4f76b6d69ff9bb749313";
 let map;
 let userLat=28.61,userLon=77.20;
 let points=parseInt(localStorage.getItem("points"))||0;
-window.addEventListener("load", ()=>{
+setTimeout(()=>{
+  initMap();
+
   setTimeout(()=>{
-    initMap();
-  },200);
-});
+    if(map) map.invalidateSize();
+  },300);
+
+},200);
 
 window.initMap = function(){
   if(map) map.remove();
@@ -628,7 +631,7 @@ function exitApp(cb){
     }, i * 80); // stagger delay
   });
 }
-  let deferredPrompt;
+ let deferredPrompt;
 
 document.addEventListener("DOMContentLoaded", () => {
 
@@ -638,16 +641,25 @@ document.addEventListener("DOMContentLoaded", () => {
     e.preventDefault();
     deferredPrompt = e;
 
-    installBtn.style.display = "block";
+    if(installBtn){
+      installBtn.style.display = "block";
+    }
   });
-  const sheet = document.getElementById("sheet");
-  if(!sheet) return;
 
-  setTimeout(()=>{
-    sheet.style.transform = `translateY(${window.innerHeight * 0.4}px)`;
-  }, 200);
+  const sheet = document.getElementById("sheet");
+
+  if(sheet){
+    setTimeout(()=>{
+      sheet.style.transform = `translateY(${window.innerHeight * 0.4}px)`;
+    }, 200);
+  }
+
 });
- document.addEventListener("click", function(e){
+
+document.addEventListener("click", function(e){
+
+  if(e.target.tagName === "BUTTON") return;
+
   const card = e.target.closest(".card");
   if(!card) return;
 
@@ -655,10 +667,8 @@ document.addEventListener("DOMContentLoaded", () => {
   setTimeout(()=>{
     card.style.transform = "";
   },150);
+
 });
-
-  const installBtn = document.getElementById("installBtn");
-
 if(installBtn){
   installBtn.addEventListener("click", async () => {
     if (!deferredPrompt) return;
@@ -811,13 +821,10 @@ document.addEventListener("click", function(e){
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 
 <script>
-const app = firebase.initializeApp({
+const firebaseApp = firebase.initializeApp({...});
  apiKey: "AIzaSyDlu9Xw8_Nb9sN-TCyMsjORViHQD9MQnRg",
     authDomain: "wanderer-6b780.firebaseapp.com",
-    projectId: "wanderer-6b780",
-    storageBucket: "wanderer-6b780.firebasestorage.app",
-    messagingSenderId: "333975351570",
-    appId: "1:333975351570:web:941fbfde1b8d8a9fe303cb"
+    projectId: "wanderer-6b780"
 });
 
 const auth = firebase.auth();
