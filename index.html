@@ -821,13 +821,25 @@ window.googleLogin = function(){
   const provider = new firebase.auth.GoogleAuthProvider();
 
   auth.signInWithPopup(provider)
-    .then(result=>{
-      console.log("Login success", result.user);
-    })
-    .catch(err=>{
-      console.error("Login error", err);
-    });
-}
+  .then(result=>{
+    console.log("Login success", result.user);
+
+    // ✅ hide login page
+    document.getElementById("loginPage").style.display = "none";
+
+    // ✅ show app
+    document.getElementById("app").style.display = "block";
+
+    // ✅ optional: show user data
+    document.getElementById("menuUser").innerText = result.user.displayName;
+    document.getElementById("menuEmail").innerText = result.user.email;
+    document.getElementById("userPhoto").src = result.user.photoURL;
+
+  })
+  .catch(err=>{
+    console.error("Login error", err);
+  });
+};
 </script>
 
 </body>
