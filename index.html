@@ -473,9 +473,10 @@ let map;
 let userLat=28.61,userLon=77.20;
 let points=parseInt(localStorage.getItem("points"))||0;
 window.addEventListener("load", ()=>{
-setTimeout(()=>{
-  initMap();
-}, 200);
+  setTimeout(()=>{
+    initMap();
+  },200);
+});
 
 window.initMap = function(){
   if(map) map.remove();
@@ -656,6 +657,9 @@ document.addEventListener("DOMContentLoaded", () => {
   },150);
 });
 
+  const installBtn = document.getElementById("installBtn");
+
+if(installBtn){
   installBtn.addEventListener("click", async () => {
     if (!deferredPrompt) return;
 
@@ -667,7 +671,7 @@ document.addEventListener("DOMContentLoaded", () => {
     deferredPrompt = null;
     installBtn.style.display = "none";
   });
-});
+}
 </script>
  <script>
 document.addEventListener("DOMContentLoaded", ()=>{
@@ -817,19 +821,28 @@ const app = firebase.initializeApp({
 });
 
 const auth = firebase.auth();
+let isLoggingIn = false;
 
 window.googleLogin = function(){
+  if(isLoggingIn) return;
+
+  isLoggingIn = true;
+
+  const btn = document.querySelector("#loginPage button");
+  if(btn) btn.disabled = true;
+
   const provider = new firebase.auth.GoogleAuthProvider();
 
   auth.signInWithPopup(provider)
     .then(result=>{
+      console.log("Login success");
+
       document.getElementById("loginPage").style.display = "none";
 
       const app = document.getElementById("app");
       app.style.display = "block";
       app.classList.add("enter");
 
-      // init map safely
       setTimeout(()=>{
         initMap();
 
@@ -839,14 +852,14 @@ window.googleLogin = function(){
 
       },200);
 
-      // ✅ keep INSIDE .then
-      document.getElementById("menuUser").innerText = result.user.displayName;
-      document.getElementById("menuEmail").innerText = result.user.email;
-      document.getElementById("userPhoto").src = result.user.photoURL;
-
+      isLoggingIn = false;
+      if(btn) btn.disabled = false;
     })
     .catch(err=>{
       console.error(err);
+
+      isLoggingIn = false;
+      if(btn) btn.disabled = false;
     });
 };
 </script>
