@@ -820,6 +820,8 @@ const firebaseConfig = {
   appId: "1:333975351570:web:941fbfde1b8d8a9fe303cb",
   measurementId: "G-CN3F0ZWEB1"
 };
+// ✅ MUST come BEFORE auth
+firebase.initializeApp(firebaseConfig);
 
 
 const auth = firebase.auth();
