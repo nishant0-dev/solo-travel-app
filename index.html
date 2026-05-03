@@ -363,15 +363,16 @@ button:active{
   transition:opacity var(--dur-mid) var(--ease-soft),
              transform var(--dur-mid) var(--ease-spring);
 }
- #app{
-  display:none;
+#app{
   opacity:0;
   transform:scale(0.98);
+  pointer-events:none;
 }
 
 #app.enter{
-  opacity:100 !important;
+  opacity:1;
   transform:scale(1);
+  pointer-events:auto;
   transition:all var(--dur-slow) var(--ease-spring);
 }
 #app.exit{
@@ -410,7 +411,7 @@ button:active{
 </div>
 
 <!-- MAIN APP -->
-<div id="app" style="display:none;">
+<div id="app">
 
   <!-- PREMIUM HEADER -->
   <div class="header">
@@ -512,6 +513,15 @@ document.addEventListener("DOMContentLoaded", () => {
     vid.muted = true;
     vid.play().catch(()=>{});
   }
+});
+
+document.addEventListener("DOMContentLoaded", () => {
+  const app = document.getElementById("app");
+  if (!app) return;
+
+  setTimeout(() => {
+    app.classList.add("enter");
+  }, 100); // small delay for animation
 });
 
 /* FETCH */
