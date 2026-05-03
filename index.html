@@ -517,11 +517,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
 document.addEventListener("DOMContentLoaded", () => {
   const app = document.getElementById("app");
+  const loginPage = document.getElementById("loginPage");
+
   if (!app) return;
 
-  setTimeout(() => {
+  // hide login safely
+  if (loginPage) loginPage.style.display = "none";
+
+  // show app
+  app.style.display = "block";
+
+  // ensure animation runs after render
+  requestAnimationFrame(() => {
     app.classList.add("enter");
-  }, 100); // small delay for animation
+  });
 });
 
 /* FETCH */
@@ -553,8 +562,6 @@ async function fetchPlaces(){
   console.error("REAL ERROR:", e);
   document.getElementById("places").innerHTML = "⚠️ Network/API blocked";
 }
-
-    const data = await res.json();
 
     let html="<div class='grid'>";
 
