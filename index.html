@@ -585,11 +585,13 @@ try {
   console.error("REAL ERROR:", e);
   document.getElementById("places").innerHTML = "⚠️ Network/API blocked";
 }
-function direction(lat,lon){
+}
+window.direction = function(lat,lon){
   window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}`);
 }
 
-function savePlace(name){
+
+window.savePlace = function(name){
   let saved = JSON.parse(localStorage.getItem("saved")) || [];
   if(!saved.includes(name)){
     saved.push(name);
