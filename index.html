@@ -475,7 +475,7 @@ button:active{
 
 
 <script>
-const API_KEY="11246f50749e4f76b6d69ff9bb749313";
+const API_KEY="df71078a2cae4e5589803910c216466a";
 
 let map;
 let userLat=28.61,userLon=77.20;
@@ -535,9 +535,24 @@ async function fetchPlaces(){
     </div>
   `;
 
-  try{
-    const res = await fetch(`https://api.geoapify.com/v2/places?categories=tourism.sights,catering.restaurant&filter=circle:${userLon},${userLat},3000&limit=10&apiKey=${API_KEY}`);
-    if(!res.ok) throw new Error();
+  try {
+  const res = await fetch(`https://api.geoapify.com/v2/places?categories=tourism.sights,catering.restaurant&filter=circle:${userLon},${userLat},3000&limit=10&apiKey=${API_KEY}`);
+
+  console.log("STATUS:", res.status);
+
+  if (!res.ok) {
+    const text = await res.text();
+    console.error("API ERROR:", text);
+    throw new Error("API failed");
+  }
+
+  const data = await res.json();
+  console.log("DATA:", data);
+
+} catch (e) {
+  console.error("REAL ERROR:", e);
+  document.getElementById("places").innerHTML = "⚠️ Network/API blocked";
+}
 
     const data = await res.json();
 
