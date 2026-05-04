@@ -79,7 +79,14 @@ input{
   inset: 0;
   z-index: 0; /* 🔥 fix */
 }
-
+#map{
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+}
 /* MAP */
    #map{
   transition:transform 0.35s ease, filter 0.35s ease;
@@ -399,10 +406,9 @@ button:active{
 <button id="installBtn">📲 Install</button>
 <div id="backdrop"></div>
 <!-- LOGIN PAGE -->
-<div id="loginPage">
-  <video autoplay muted loop playsinline id="bgVideo">
-    <source src="video.mp4" type="video/mp4">
-  </video>
+<video autoplay muted loop playsinline id="bgVideo">
+  <source src="https://www.w3schools.com/howto/rain.mp4" type="video/mp4">
+</video>
 
   <div class="login-box">
     <h2>🌍 Wanderer Pro</h2>
