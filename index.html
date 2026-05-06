@@ -1,920 +1,1099 @@
 <!DOCTYPE html>
-<!-- redeploy -->
 <html>
 <head>
-
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Wanderer Pro</title>
-
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-<meta name="theme-color" content="#0f172a">
-  <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
 
-:root{
-  --bg:#0b1220;
-  --card:#111827;
-  --glass:rgba(255,255,255,0.06);
-  --accent:#3b82f6;
-  --accent2:#22c55e;
-  --text:#e2e8f0;
-}
-
-/* ===== GLOBAL RESET ===== */
-body{
-  margin:0;
-  font-family:'Inter',sans-serif;
-  background:#020617;
-  color:white;
-  overflow:hidden;
-}
-   body::before{
-  content:"";
-  position:fixed;
-  top:-20%;
-  left:-20%;
-  width:140%;
-  height:140%;
-  background:radial-gradient(circle at 30% 20%, rgba(59,130,246,0.15), transparent 40%);
-  z-index:0;
+<style>
+:root {
+  --bg: #020617;
+  --card: #0f172a;
+  --accent: #3b82f6;
+  --accent2: #22c55e;
+  --text: #e2e8f0;
+  --glass: rgba(15,23,42,0.7);
 }
 
-*{
-  transition:all 0.25s cubic-bezier(.4,0,.2,1);
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  height: 100vh;
+  overflow: hidden;
+  position: relative;
 }
 
-/* ===== NAVBAR (GLASS) ===== */
-.header{
-  position:fixed;
-  top:10px;
-  left:50%;
-  transform:translateX(-50%);
-  width:92%;
-  z-index:1000;
-  justify-content:space-between;
-  padding:12px 18px;
-
-  border-radius:20px;
-  background:rgba(15,23,42,0.6);
-  backdrop-filter:blur(12px);
-  border:1px solid rgba(255,255,255,0.08);
-}
-
-
-/* SEARCH */
-input{
-  width:90%;
-  margin:12px auto;
-  padding:14px;
-  border-radius:16px;
-  border:none;
-  background:var(--card);
-  color:white;
-  box-shadow:
-    inset 2px 2px 6px rgba(0,0,0,0.6),
-    inset -2px -2px 6px rgba(255,255,255,0.05);
-}
-    #map{
-  position: fixed;
-  inset: 0;
-  z-index: 0; /* 🔥 fix */
-}
-#map{
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 0;
-}
-/* MAP */
-   #map{
-  transition:transform 0.35s ease, filter 0.35s ease;
-  transform-origin:center;
-}
-     #backdrop{
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,0);
-  backdrop-filter:blur(0px);
-  z-index:900;
-  pointer-events:none;
-  transition:0.3s;
-}
-
-/* SHEET */
-#sheet{
-  position:fixed;
-  left:0;
-  bottom:0;
-  width:100%;
-  height:80vh;
-  z-index:1000;
-
-  background:rgba(2,6,23,0.95);
-  backdrop-filter:blur(20px);
-
-  border-radius:25px 25px 0 0;
-  padding:16px;
-  overflow:auto;
-
-  transform:translateY(50%); /* default half open */
-  transition:transform 0.3s ease;
-  touch-action:none;
-}
-
-/* drag handle */
-#sheet::before{
-  content:"";
-  width:40px;
-  height:5px;
-  background:#334155;
-  border-radius:10px;
-  display:block;
-  margin:0 auto 10px;
-  cursor:grab;
-}
-#sheet{
-  will-change: transform;
-}
-   #dragHandle{
-  width:40px;
-  height:5px;
-  background:#334155;
-  border-radius:10px;
-  margin:0 auto 10px;
-}
-/* ===== GRID ===== */
-.grid{
-  display:flex;
-  gap:14px;
-  overflow-x:auto;
-}
-
-/* ===== CARD (PREMIUM) ===== */
-.card{
-  min-width:200px;
-  border-radius:18px;
-  overflow:hidden;
-  position:relative;
-}
-
-.card img{
-  width:100%;
-  height:150px;
-  object-fit:cover;
-}
-
-/* OVERLAY */
-.card::after{
-  content:"";
-  position:absolute;
-  inset:0;
-  background:linear-gradient(to top, rgba(0,0,0,0.7), transparent);
-}
-
-.card-content{
-  position:absolute;
-  bottom:0;
-  padding:12px;
-}
-   .card{
-  transform-style:preserve-3d;
-  transition:0.3s;
-}
-
-.card:hover{
-  transform:translateY(-8px) scale(1.03);
-  box-shadow:0 30px 80px rgba(0,0,0,0.8);
-}
-
-/* BUTTON */
-button{
-  background:linear-gradient(135deg,#2563eb,#1d4ed8);
-  border:none;
-  color:white;
-  border-radius:10px;
-  padding:6px 10px;
-}
-   button{
-  transition:transform 0.15s ease, box-shadow 0.15s;
-}
-
-button:active{
-  transform:scale(0.92);
-  box-shadow:0 2px 10px rgba(0,0,0,0.5) inset;
-}
-
-/* SKELETON */
-.skeleton{
-  height:180px;
-  border-radius:16px;
-  background:linear-gradient(90deg,#1e293b 25%,#334155 50%,#1e293b 75%);
-  background-size:200% 100%;
-  animation:shimmer 1.2s infinite;
-}
-
-@keyframes shimmer{
-  0%{background-position:-200%}
-  100%{background-position:200%}
-}
-
-/* INSTALL BUTTON */
-#installBtn{
-  position:fixed;
-  bottom:80px;
-  right:15px;
-  padding:12px 16px;
-  border-radius:20px;
-  background:linear-gradient(135deg,#22c55e,#16a34a);
-  box-shadow:0 10px 30px rgba(0,0,0,0.5);
-  display:none;
-}
-    /* LOGIN BOX */
-.login-box{
-  position:absolute;
-  top:45%;
-  left:50%;
-  transform:translate(-50%,-50%);
-  text-align:center;
-  background:rgba(0,0,0,0.4);
-  padding:25px;
-  border-radius:20px;
-  backdrop-filter:blur(10px);
-}
-
-/* HEADER */
-.header{
-  display:flex;
-  justify-content:space-between;
-  padding:12px 16px;
-  align-items:center;
-}
-
-.header-right{
-  display:flex;
-  gap:10px;
-  align-items:center;
-}
-
-/* ===== SEARCH FLOAT ===== */
-.top-controls{
-  position:fixed;
-  top:70px;
-  left:50%;
-  transform:translateX(-50%);
-  width:85%;
-  z-index:1000;
-}
-
-.top-controls input{
-  width:100%;
-  padding:14px 18px;
-  border-radius:999px;
-  border:none;
-  background:rgba(255,255,255,0.08);
-  color:white;
-  outline:none;
-}
-.loc-btn{
-  position:absolute;
-  right:6px;
-  top:6px;
-  border-radius:50%;
-  padding:10px;
-}
-
-
-/* MAP IMPROVE */
-#map{
+/* ===== MAP ===== */
+#map {
   position: fixed;
   inset: 0;
   z-index: 1;
-
-}
-/* NAV ICONS */
-.nav button{
-  font-size:18px;
+  width: 100%;
+  height: 100%;
 }
 
-/* INSTALL BTN */
-#installBtn{
-  position:fixed;
-  bottom:90px;
-  right:15px;
-  z-index:1000;
-  padding:12px;
-  border-radius:20px;
-}
-
-/* MENU DEPTH */
-#menu{
-  box-shadow:0 0 40px rgba(0,0,0,0.8);
-}
-
-/* PROFILE IMAGE */
-.profile-top img{
-  border:3px solid #3b82f6;
-}
-   /* ===== NAVBAR BOTTOM (FLOATING) ===== */
-.nav{
-  position:fixed;
-  bottom:15px;
-  left:50%;
-  transform:translateX(-50%);
-  z-index:1000;
-
-  display:flex;
-  gap:20px;
-  padding:10px 20px;
-
-  border-radius:20px;
-  background:rgba(255,255,255,0.05);
-  backdrop-filter:blur(12px);
-}
-
-/* ===== BUTTON FEEDBACK ===== */
-button:active{
-  transform:scale(0.9);
-}
-
-/* ===== SUGGESTIONS ===== */
-#suggestions{
-  position:absolute;
-  top:60px;
-  width:100%;
-  background:#020617;
-  border-radius:12px;
-  overflow:hidden;
-}
- /* motion tokens */
-:root{
-  --ease-spring: cubic-bezier(.22,1,.36,1);
-  --ease-soft: cubic-bezier(.4,0,.2,1);
-  --dur-fast: 140ms;
-  --dur-mid: 260ms;
-  --dur-slow: 420ms;
-}
-
-/* prevent layout jank */
-*{ will-change: transform, opacity; }
-
-/* fade/slide base */
-.fade-in{
-  opacity:0;
-  transform:translateY(14px);
-}
-.fade-in.show{
-  opacity:1;
-  transform:translateY(0);
-  transition:opacity var(--dur-mid) var(--ease-soft),
-             transform var(--dur-mid) var(--ease-spring);
-}
-#app{
-  opacity:0;
-  transform:scale(0.98);
-  pointer-events:none;
-}
-
-#app.enter{
-  opacity:1;
-  transform:scale(1);
-  pointer-events:auto;
-  transition:all var(--dur-slow) var(--ease-spring);
-}
-#app.exit{
-  opacity:0;
-  transform:scale(1.02);
-  transition:all var(--dur-fast) var(--ease-soft);
-}
-    #bgVideo{
+/* ===== LOGIN PAGE ===== */
+#loginPage {
   position: fixed;
   inset: 0;
-  z-index: -1;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(2,6,23,0.92);
+  backdrop-filter: blur(20px);
 }
+
+#bgVideo {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: -1;
+  opacity: 0.3;
+}
+
+.login-box {
+  text-align: center;
+  background: rgba(15,23,42,0.8);
+  padding: 40px 30px;
+  border-radius: 24px;
+  border: 1px solid rgba(255,255,255,0.1);
+  backdrop-filter: blur(20px);
+  max-width: 320px;
+  width: 90%;
+}
+
+.login-box h2 {
+  font-family: 'Syne', sans-serif;
+  font-size: 28px;
+  margin-bottom: 8px;
+}
+
+.login-box p {
+  color: #64748b;
+  font-size: 14px;
+  margin-bottom: 28px;
+}
+
+.login-btn {
+  width: 100%;
+  padding: 14px;
+  border-radius: 14px;
+  border: none;
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: white;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.login-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(37,99,235,0.4); }
+.login-btn:active { transform: scale(0.96); }
+
+/* ===== MAIN APP ===== */
+#app {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none; /* pass-through to map except on UI elements */
+}
+
+#app.visible {
+  display: block;
+}
+
+/* ===== HEADER ===== */
+.header {
+  position: fixed;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 92%;
+  z-index: 100;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 18px;
+  border-radius: 20px;
+  background: var(--glass);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255,255,255,0.08);
+  pointer-events: auto;
+}
+
+.header .title {
+  font-family: 'Syne', sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+
+.header-right {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+#userPoints {
+  font-size: 13px;
+  background: rgba(59,130,246,0.15);
+  padding: 4px 10px;
+  border-radius: 20px;
+  border: 1px solid rgba(59,130,246,0.3);
+}
+
+#profileBtn {
+  cursor: pointer;
+  font-size: 20px;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+  transition: background 0.2s;
+}
+#profileBtn:hover { background: rgba(255,255,255,0.12); }
+
+/* ===== SEARCH ===== */
+.top-controls {
+  position: fixed;
+  top: 78px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 88%;
+  z-index: 100;
+  pointer-events: auto;
+}
+
+.search-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.search-wrap input {
+  width: 100%;
+  padding: 13px 50px 13px 18px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(15,23,42,0.85);
+  backdrop-filter: blur(12px);
+  color: white;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.search-wrap input:focus { border-color: var(--accent); }
+.search-wrap input::placeholder { color: #475569; }
+
+.loc-btn {
+  position: absolute;
+  right: 6px;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: none;
+  background: var(--accent);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  flex-shrink: 0;
+  transition: transform 0.15s;
+}
+.loc-btn:active { transform: scale(0.88); }
+
+/* ===== SUGGESTIONS ===== */
+#suggestions {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  width: 100%;
+  background: #0f172a;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 16px;
+  overflow: hidden;
+  z-index: 200;
+}
+
+#suggestions div {
+  padding: 12px 16px;
+  cursor: pointer;
+  font-size: 13px;
+  color: #cbd5e1;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  transition: background 0.15s;
+}
+#suggestions div:hover { background: rgba(59,130,246,0.1); }
+#suggestions div:last-child { border-bottom: none; }
+
+/* ===== BOTTOM SHEET ===== */
+#sheet {
+  position: fixed;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 75vh;
+  z-index: 50;
+  background: rgba(7,12,30,0.97);
+  backdrop-filter: blur(24px);
+  border-radius: 28px 28px 0 0;
+  border-top: 1px solid rgba(255,255,255,0.07);
+  padding: 0 16px 80px;
+  overflow-y: auto;
+  will-change: transform;
+  pointer-events: auto;
+}
+
+#dragHandle {
+  width: 44px;
+  height: 5px;
+  background: #334155;
+  border-radius: 99px;
+  margin: 14px auto 16px;
+  cursor: grab;
+  flex-shrink: 0;
+}
+
+.sheet-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 14px;
+  padding: 0 4px;
+}
+
+/* ===== GRID / CARDS ===== */
+.grid {
+  display: flex;
+  gap: 14px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  scrollbar-width: none;
+}
+.grid::-webkit-scrollbar { display: none; }
+
+.card {
+  min-width: 200px;
+  max-width: 200px;
+  border-radius: 18px;
+  overflow: hidden;
+  position: relative;
+  background: #0f172a;
+  border: 1px solid rgba(255,255,255,0.06);
+  flex-shrink: 0;
+  cursor: pointer;
+  transition: transform 0.25s, box-shadow 0.25s;
+}
+.card:hover { transform: translateY(-6px); box-shadow: 0 24px 60px rgba(0,0,0,0.7); }
+.card:active { transform: scale(0.96); }
+
+.card-img {
+  width: 100%;
+  height: 130px;
+  background: linear-gradient(135deg, #1e293b, #0f172a);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 40px;
+}
+
+.card-content {
+  padding: 12px;
+}
+.card-name {
+  font-family: 'Syne', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.card-cat {
+  font-size: 11px;
+  color: #64748b;
+  margin-bottom: 10px;
+}
+
+.card-actions {
+  display: flex;
+  gap: 6px;
+}
+.card-actions button {
+  flex: 1;
+  padding: 7px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  font-size: 13px;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 500;
+  transition: transform 0.12s, opacity 0.12s;
+}
+.card-actions button:active { transform: scale(0.92); opacity: 0.8; }
+.btn-dir { background: linear-gradient(135deg, #2563eb, #1d4ed8); color: white; }
+.btn-save { background: rgba(34,197,94,0.15); color: #22c55e; border: 1px solid rgba(34,197,94,0.25) !important; }
+
+/* ===== SKELETON ===== */
+.skeleton {
+  min-width: 200px;
+  height: 200px;
+  border-radius: 18px;
+  background: linear-gradient(90deg, #0f172a 25%, #1e293b 50%, #0f172a 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite;
+  flex-shrink: 0;
+}
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* ===== SAVED PANEL ===== */
+#savedPanel {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: rgba(7,12,30,0.98);
+  backdrop-filter: blur(20px);
+  padding: 100px 20px 100px;
+  overflow-y: auto;
+  pointer-events: auto;
+}
+
+.saved-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 20px;
+}
+
+.saved-item {
+  background: #0f172a;
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 14px;
+  padding: 14px 16px;
+  margin-bottom: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* ===== BOTTOM NAV ===== */
+.nav {
+  position: fixed;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 200;
+  display: flex;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 999px;
+  background: rgba(15,23,42,0.9);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.08);
+  pointer-events: auto;
+}
+
+.nav button {
+  background: transparent;
+  border: none;
+  color: #64748b;
+  font-size: 22px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, transform 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.nav button.active, .nav button:hover { background: rgba(59,130,246,0.15); color: var(--accent); }
+.nav button:active { transform: scale(0.88); }
+
+/* ===== SIDE MENU ===== */
+#menu {
+  position: fixed;
+  top: 0;
+  right: -280px;
+  width: 280px;
+  height: 100%;
+  z-index: 300;
+  background: #0b1120;
+  border-left: 1px solid rgba(255,255,255,0.07);
+  padding: 60px 20px 30px;
+  transition: right 0.3s cubic-bezier(.22,1,.36,1);
+  pointer-events: auto;
+}
+#menu.open { right: 0; }
+
+#overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 250;
+  background: rgba(0,0,0,0);
+  pointer-events: none;
+  transition: background 0.3s;
+}
+#overlay.open {
+  background: rgba(0,0,0,0.5);
+  pointer-events: auto;
+}
+
+.profile-top {
+  text-align: center;
+  margin-bottom: 30px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+}
+
+.profile-top img {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  border: 2px solid var(--accent);
+  object-fit: cover;
+  margin-bottom: 10px;
+}
+
+.profile-top h3 { font-family: 'Syne', sans-serif; font-size: 17px; }
+.profile-top p { font-size: 12px; color: #64748b; margin-top: 3px; }
+
+.menu-items { display: flex; flex-direction: column; gap: 6px; }
+.menu-items button {
+  text-align: left;
+  background: transparent;
+  border: none;
+  color: #cbd5e1;
+  padding: 12px 14px;
+  border-radius: 12px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.menu-items button:hover { background: rgba(255,255,255,0.06); }
+
+/* ===== INSTALL BTN ===== */
+#installBtn {
+  position: fixed;
+  bottom: 90px;
+  right: 16px;
+  z-index: 200;
+  padding: 12px 18px;
+  border-radius: 18px;
+  border: none;
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  color: white;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 500;
+  font-size: 14px;
+  cursor: pointer;
+  display: none;
+  box-shadow: 0 10px 30px rgba(34,197,94,0.3);
+  pointer-events: auto;
+}
+
+/* ===== BACKDROP ===== */
+#backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  background: rgba(0,0,0,0);
+  backdrop-filter: blur(0px);
+  transition: 0.3s;
+}
+
+/* ===== TOAST ===== */
+#toast {
+  position: fixed;
+  bottom: 90px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: #1e293b;
+  border: 1px solid rgba(255,255,255,0.1);
+  color: white;
+  padding: 10px 20px;
+  border-radius: 99px;
+  font-size: 13px;
+  z-index: 9999;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s, transform 0.3s;
+}
+#toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 </style>
 </head>
-
 <body>
 
 <!-- AUDIO -->
 <audio id="loginSound" src="https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3"></audio>
 <audio id="saveSound" src="https://assets.mixkit.co/active_storage/sfx/270/270-preview.mp3"></audio>
-<audio id="rewardSound" src="https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3"></audio>
 
-<!-- FLOATING INSTALL BUTTON -->
-<button id="installBtn">📲 Install</button>
-<div id="backdrop"></div>
-<!-- LOGIN PAGE -->
-<video autoplay muted loop playsinline id="bgVideo">
-  <source src="https://www.w3schools.com/howto/rain.mp4" type="video/mp4">
-</video>
-
+<!-- ===== LOGIN PAGE ===== -->
+<div id="loginPage">
+  <video autoplay muted loop playsinline id="bgVideo">
+    <source src="https://www.w3schools.com/howto/rain.mp4" type="video/mp4">
+  </video>
   <div class="login-box">
-    <h2>🌍 Wanderer Pro</h2>
-<button onclick="window.googleLogin && googleLogin()">Login</button>
+    <div style="font-size:48px;margin-bottom:12px">🌍</div>
+    <h2>Wanderer Pro</h2>
+    <p>Discover places around you</p>
+    <button class="login-btn" onclick="googleLogin()">
+      <span>🔐</span> Sign in with Google
+    </button>
+    <button class="login-btn" style="margin-top:10px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.1)" onclick="guestLogin()">
+      Continue as Guest
+    </button>
   </div>
 </div>
 
-<!-- MAIN APP -->
+<!-- ===== MAIN APP ===== -->
 <div id="app">
 
-  <!-- PREMIUM HEADER -->
+  <!-- MAP (z-index 1) -->
+  <div id="map"></div>
+  <div id="backdrop"></div>
+
+  <!-- HEADER -->
   <div class="header">
-    <div class="title">Wanderer</div>
+    <div class="title">🌍 Wanderer</div>
     <div class="header-right">
       <span id="userPoints">⭐ 0</span>
       <div id="profileBtn" onclick="toggleMenu()">☰</div>
     </div>
   </div>
 
-  <!-- OVERLAY -->
+  <!-- OVERLAY + MENU -->
   <div id="overlay" onclick="toggleMenu()"></div>
-
-  <!-- SIDE MENU -->
   <div id="menu">
     <div class="profile-top">
-      <img id="userPhoto" src="https://via.placeholder.com/80" />
-      <h3 id="menuUser">User</h3>
-      <p id="menuEmail">email@gmail.com</p>
+      <img id="userPhoto" src="https://ui-avatars.com/api/?name=Guest&background=1e293b&color=fff" />
+      <h3 id="menuUser">Guest</h3>
+      <p id="menuEmail">Not signed in</p>
     </div>
-
     <div class="menu-items">
-      <button onclick="showTab('explore')">🏠 Explore</button>
-      <button onclick="showTab('saved')">❤️ Saved</button>
-      <button>⚙️ Settings</button>
-      <button>ℹ️ About</button>
+      <button onclick="showTab('explore');toggleMenu()">🏠 Explore</button>
+      <button onclick="showTab('saved');toggleMenu()">❤️ Saved</button>
+      <button onclick="showToast('Settings coming soon!')">⚙️ Settings</button>
+      <button onclick="showToast('Made with ❤️ by Wanderer')">ℹ️ About</button>
       <button onclick="logout()">🚪 Logout</button>
     </div>
   </div>
 
-  <!-- SEARCH + LOCATION -->
+  <!-- SEARCH -->
   <div class="top-controls">
-    <input id="searchInput" placeholder="Search places..." oninput="suggestPlaces(this.value)">
-    <button class="loc-btn" onclick="getLocation()">📍</button>
+    <div class="search-wrap">
+      <input id="searchInput" placeholder="Search places..." oninput="suggestPlaces(this.value)">
+      <button class="loc-btn" onclick="getLocation()">📍</button>
+    </div>
+    <div id="suggestions"></div>
   </div>
 
-  <!-- SUGGESTIONS -->
-  <div id="suggestions"></div>
-
-  <!-- MAP -->
-  <div id="map"></div>
-
-  <!-- BOTTOM SHEET -->
+  <!-- BOTTOM SHEET (explore) -->
   <div id="sheet">
-<div id="dragHandle"></div>
-    <div id="places"></div>
+    <div id="dragHandle"></div>
+    <div class="sheet-title">Nearby Places</div>
+    <div id="places">
+      <div class="grid">
+        <div class="skeleton"></div>
+        <div class="skeleton"></div>
+        <div class="skeleton"></div>
+      </div>
+    </div>
   </div>
 
-  <!-- SAVED TAB -->
-  <div id="saved" style="display:none"></div>
+  <!-- SAVED PANEL -->
+  <div id="savedPanel">
+    <div class="saved-title">❤️ Saved Places</div>
+    <div id="savedList"></div>
+  </div>
 
-  <!-- NAVBAR -->
+  <!-- BOTTOM NAV -->
   <div class="nav">
-    <button onclick="showTab('explore')">🏠</button>
-    <button onclick="showTab('saved')">❤️</button>
+    <button id="navExplore" class="active" onclick="showTab('explore')">🏠</button>
+    <button id="navSaved" onclick="showTab('saved')">❤️</button>
   </div>
 
+  <!-- INSTALL BTN -->
+  <button id="installBtn">📲 Install App</button>
 </div>
+
+<!-- TOAST -->
+<div id="toast"></div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-
-<script>
-const API_KEY="df71078a2cae4e5589803910c216466a";
-
-let map;
-let userLat=28.61,userLon=77.20;
-let points=parseInt(localStorage.getItem("points"))||0;
-setTimeout(()=>{
-  initMap();
-
-  setTimeout(()=>{
-    if(map) map.invalidateSize();
-  },300);
-
-},200);
-
-window.initMap = function(){
-  if(map) map.remove();
-
-  map = L.map('map').setView([userLat, userLon], 13);
-
-  L.tileLayer(`https://maps.geoapify.com/v1/tile/osm-bright/{z}/{x}/{y}.png?apiKey=${API_KEY}`)
-    .addTo(map);
-
-  fetchPlaces();
-}
-
-function updateMapScale(val){
-  const mapEl = document.getElementById("map");
-  let scale = 1 - (val / window.innerHeight) * 0.05;
-  mapEl.style.transform = `scale(${scale})`;
-}
-
-/* BASIC LOAD */
-document.addEventListener("DOMContentLoaded", () => {
-  const vid = document.getElementById("bgVideo");
-  if (vid) {
-    vid.muted = true;
-    vid.play().catch(()=>{});
-  }
-});
-
-document.addEventListener("DOMContentLoaded", () => {
-  const app = document.getElementById("app");
-  const loginPage = document.getElementById("loginPage");
-
-  if (!app) return;
-
-  // hide login safely
-  if (loginPage) loginPage.style.display = "none";
-
-  // show app
-  app.style.display = "block";
-
-  // ensure animation runs after render
-  requestAnimationFrame(() => {
-    app.classList.add("enter");
-  });
-});
-
-/* FETCH */
-async function fetchPlaces(){
-  document.getElementById("places").innerHTML = `
-    <div class="grid">
-      <div class="skeleton"></div>
-      <div class="skeleton"></div>
-      <div class="skeleton"></div>
-      <div class="skeleton"></div>
-    </div>
-  `;
-
-try {
-  const res = await fetch(`https://api.geoapify.com/v2/places?categories=tourism.sights,catering.restaurant&filter=circle:${userLon},${userLat},3000&limit=10&apiKey=${API_KEY}`);
-
-  console.log("STATUS:", res.status);
-
-  if (!res.ok) {
-    const text = await res.text();
-    console.error("API ERROR:", text);
-    throw new Error("API failed");
-  }
-
-  const data = await res.json();
-  console.log("DATA:", data);
-
-  // 🔥 IMPORTANT: render यहीं करो (outside नहीं)
-  let html = "<div class='grid'>";
-
-  data.features.forEach(p => {
-    const name = p.properties.name || "Place";
-    const lat = p.properties.lat;
-    const lon = p.properties.lon;
-
-    html += `
-      <div class="card">
-        <div class="card-content">
-          ${name}
-          <div>
-            <button onclick="direction(${lat},${lon})">🧭</button>
-          </div>
-        </div>
-      </div>`;
-  });
-
-  html += "</div>";
-
-  document.getElementById("places").innerHTML = html;
-
-} catch (e) {
-  console.error("REAL ERROR:", e);
-  document.getElementById("places").innerHTML = "⚠️ Network/API blocked";
-}
-}
-window.direction = function(lat,lon){
-  window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}`);
-}
-
-
-window.savePlace = function(name){
-  let saved = JSON.parse(localStorage.getItem("saved")) || [];
-  if(!saved.includes(name)){
-    saved.push(name);
-    localStorage.setItem("saved", JSON.stringify(saved));
-  }
-}
-
-window.showTab = function(tab){
-  if(tab==="explore"){
-    document.getElementById("sheet").style.display="block";
-    document.getElementById("saved").style.display="none";
-  }else{
-    document.getElementById("sheet").style.display="none";
-    document.getElementById("saved").style.display="block";
-  }
-}
-
-function toggleMenu(){
-  document.getElementById("menu").classList.toggle("open");
-  document.getElementById("overlay").classList.toggle("open");
-}
-  // ✅ ADD MISSING FUNCTIONS
-
-async function suggestPlaces(q){
-  if(q.length<2) return;
-
-  try{
-    const res = await fetch(`https://api.geoapify.com/v1/geocode/autocomplete?text=${q}&apiKey=${API_KEY}`);
-    const data = await res.json();
-
-    let html="";
-    data.features.forEach(p=>{
-      html += `<div onclick="selectPlace(${p.properties.lat},${p.properties.lon})">
-        ${p.properties.formatted}
-      </div>`;
-    });
-
-    document.getElementById("suggestions").innerHTML = html;
-  }catch(e){}
-}
-
-function selectPlace(lat,lon){
-  userLat = lat;
-  userLon = lon;
-  document.getElementById("suggestions").innerHTML = "";
-  initMap();
-}
-
-function playSound(id){
-  const sound = document.getElementById(id);
-  if(!sound) return;
-  sound.currentTime = 0;
-  sound.play().catch(()=>{});
-}
-function enterApp(){
-  const app = document.getElementById("app");
-  app.classList.add("enter");
-}
-
-function exitApp(cb){
-  const app = document.getElementById("app");
-  app.classList.add("exit");
-  setTimeout(cb, 150);
-}
- function animateCards(){
-  const cards = document.querySelectorAll(".card");
-  cards.forEach((card, i)=>{
-    card.classList.add("fade-in");
-    setTimeout(()=>{
-      card.classList.add("show");
-    }, i * 80); // stagger delay
-  });
-}
- let deferredPrompt;
-document.addEventListener("DOMContentLoaded", () => {
-  const installBtn = document.getElementById("installBtn");
-
-  if(installBtn){
-    installBtn.addEventListener("click", async () => {
-      if (!deferredPrompt) return;
-
-      deferredPrompt.prompt();
-
-      const { outcome } = await deferredPrompt.userChoice;
-      console.log("Install result:", outcome);
-
-      deferredPrompt = null;
-      installBtn.style.display = "none";
-    });
-  }
-
-  const sheet = document.getElementById("sheet");
-
-  if(sheet){
-    setTimeout(()=>{
-      sheet.style.transform = `translateY(${window.innerHeight * 0.4}px)`;
-    }, 200);
-  }
-
-});
-
-document.addEventListener("click", function(e){
-
-  if(e.target.tagName === "BUTTON") return;
-
-  const card = e.target.closest(".card");
-  if(!card) return;
-
-  card.style.transform = "scale(0.95)";
-  setTimeout(()=>{
-    card.style.transform = "";
-  },150);
-
-});
-</script>
- <script>
-document.addEventListener("DOMContentLoaded", ()=>{
-
-  const sheet = document.getElementById("sheet");
-  const handle = document.getElementById("dragHandle");
-
-  if(!sheet || !handle){
-    console.error("DOM not found");
-    return;
-  }
-
-  let startY = 0;
-  let currentY = 0;
-  let lastY = 0;
-  let velocity = 0;
-  let isDragging = false;
-  let currentTranslate = window.innerHeight * 0.5;
-
-  const snapPoints = {
-    full: 0,
-    mid: window.innerHeight * 0.4,
-    collapsed: window.innerHeight * 0.75
-  };
-
-  sheet.style.transform = `translateY(${snapPoints.mid}px)`;
-
-  handle.addEventListener("mousedown", startDrag);
-  handle.addEventListener("touchstart", startDrag);
-
-  function startDrag(e){
-    isDragging = true;
-    startY = getY(e);
-    lastY = startY;
-    velocity = 0;
-
-    sheet.style.transition = "none";
-
-    document.addEventListener("mousemove", onDrag);
-    document.addEventListener("touchmove", onDrag, { passive:false });
-
-    document.addEventListener("mouseup", endDrag);
-    document.addEventListener("touchend", endDrag);
-  }
-
-  function onDrag(e){
-    if(!isDragging) return;
-    e.preventDefault();
-
-    currentY = getY(e);
-    let delta = currentY - startY;
-
-    velocity = currentY - lastY;
-    lastY = currentY;
-
-    let next = currentTranslate + delta;
-
-    next = Math.max(snapPoints.full, Math.min(snapPoints.collapsed, next));
-
-    updateEffects(next);
-
-    sheet.style.transform = `translateY(${next}px)`;
-  }
-
-  function endDrag(){
-    isDragging = false;
-
-    sheet.style.transition = "transform 0.35s cubic-bezier(.22,1,.36,1)";
-
-    let final = getNearestSnap(currentTranslate + (currentY - startY) + velocity * 5);
-
-    currentTranslate = final;
-    sheet.style.transform = `translateY(${final}px)`;
-
-    document.removeEventListener("mousemove", onDrag);
-    document.removeEventListener("touchmove", onDrag);
-  }
-
-  function getY(e){
-    return e.touches ? e.touches[0].clientY : e.clientY;
-  }
-
-  function getNearestSnap(pos){
-    const points = Object.values(snapPoints);
-    return points.reduce((prev, curr) => 
-      Math.abs(curr - pos) < Math.abs(prev - pos) ? curr : prev
-    );
-  }
-
-});
-function updateEffects(val){
-  const map = document.getElementById("map");
-  const backdrop = document.getElementById("backdrop");
-
-  let progress = val / window.innerHeight;
-
-  // map transform
-  map.style.transform = `
-    scale(${1 - progress * 0.08})
-    translateY(${progress * -10}px)
-  `;
-
-  map.style.filter = `blur(${progress * 4}px)`;
-
-  // backdrop
-  backdrop.style.background = `rgba(0,0,0,${progress * 0.5})`;
-  backdrop.style.backdropFilter = `blur(${progress * 6}px)`;
-}
-</script>
- <script>
-document.addEventListener("click", function(e){
-  const btn = e.target.closest("button");
-  if(!btn) return;
-
-  const ripple = document.createElement("span");
-  ripple.style.position = "absolute";
-  ripple.style.width = ripple.style.height = "100px";
-  ripple.style.background = "rgba(255,255,255,0.3)";
-  ripple.style.borderRadius = "50%";
-  ripple.style.left = e.offsetX - 50 + "px";
-  ripple.style.top = e.offsetY - 50 + "px";
-  ripple.style.pointerEvents = "none";
-  ripple.style.transform = "scale(0)";
-  ripple.style.transition = "0.4s";
-
-  btn.style.position = "relative";
-  btn.appendChild(ripple);
-
-  setTimeout(()=> ripple.style.transform="scale(2)",10);
-  setTimeout(()=> ripple.remove(),400);
-});
-</script>
-
-<!-- FIREBASE SDK -->
+<!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 
-<!-- FIREBASE -->
 <script>
+// ===== CONFIG =====
+const API_KEY = "df71078a2cae4e5589803910c216466a";
+
 const firebaseConfig = {
   apiKey: "AIzaSyDlu9Xw8_Nb9sN-TCyMsjORViHQD9MQnRg",
   authDomain: "wanderer-6b780.firebaseapp.com",
   projectId: "wanderer-6b780",
   storageBucket: "wanderer-6b780.firebasestorage.app",
   messagingSenderId: "333975351570",
-  appId: "1:333975351570:web:941fbfde1b8d8a9fe303cb",
-  measurementId: "G-CN3F0ZWEB1"
+  appId: "1:333975351570:web:941fbfde1b8d8a9fe303cb"
 };
 
 firebase.initializeApp(firebaseConfig);
-
 const auth = firebase.auth();
-let isLoggingIn = false;
 
-window.googleLogin = function(){
+// ===== STATE =====
+let map = null;
+let userLat = 28.61, userLon = 77.20;
+let points = parseInt(localStorage.getItem("points")) || 0;
 
-  if(isLoggingIn) return;
-  isLoggingIn = true;
-
-  const btn = document.querySelector("#loginPage button");
-  if(btn) btn.disabled = true;
-
+// ===== AUTH =====
+window.googleLogin = function() {
   const provider = new firebase.auth.GoogleAuthProvider();
-
   auth.signInWithPopup(provider)
-    .then(() => {
-
-      console.log("Login success");
-
-      const loginPage = document.getElementById("loginPage");
-      const appEl = document.getElementById("app");
-
-      if(loginPage) loginPage.style.display = "none";
-
-      if(appEl){
-        appEl.style.display = "block";
-
-        // force reflow
-        appEl.offsetHeight;
-
-        appEl.classList.add("enter");
-      }
-
-      requestAnimationFrame(()=>{
-        requestAnimationFrame(()=>{
-          initMap();
-          setTimeout(()=>{
-            if(map) map.invalidateSize();
-          },400);
-        });
-      });
-
-      isLoggingIn = false;
-      if(btn) btn.disabled = false;
-
+    .then(result => {
+      const user = result.user;
+      updateUserUI(user.displayName, user.email, user.photoURL);
+      enterApp();
     })
-    .catch((err) => {
-      console.error(err);
-      isLoggingIn = false;
-      if(btn) btn.disabled = false;
+    .catch(err => {
+      console.error("Login error:", err);
+      showToast("Login failed: " + err.message);
     });
-
 };
+
+window.guestLogin = function() {
+  updateUserUI("Guest", "guest@wanderer.app", null);
+  enterApp();
+};
+
+window.logout = function() {
+  auth.signOut().catch(() => {});
+  const app = document.getElementById("app");
+  const loginPage = document.getElementById("loginPage");
+  app.style.display = "none";
+  loginPage.style.display = "flex";
+  if (map) { map.remove(); map = null; }
+};
+
+function updateUserUI(name, email, photo) {
+  document.getElementById("menuUser").textContent = name || "User";
+  document.getElementById("menuEmail").textContent = email || "";
+  if (photo) document.getElementById("userPhoto").src = photo;
+  else document.getElementById("userPhoto").src = `https://ui-avatars.com/api/?name=${encodeURIComponent(name||'G')}&background=1e293b&color=fff`;
+}
+
+function enterApp() {
+  document.getElementById("loginPage").style.display = "none";
+  const app = document.getElementById("app");
+  app.style.display = "block";
+
+  // init map after display:block so it has dimensions
+  setTimeout(() => {
+    initMap();
+    initSheet();
+    updatePointsUI();
+  }, 100);
+
+  playSound("loginSound");
+}
+
+// ===== MAP =====
+function initMap() {
+  if (map) { map.remove(); map = null; }
+
+  map = L.map('map', { zoomControl: true }).setView([userLat, userLon], 13);
+
+  L.tileLayer(
+    `https://maps.geoapify.com/v1/tile/osm-bright/{z}/{x}/{y}.png?apiKey=${API_KEY}`,
+    { attribution: '© Geoapify | © OpenStreetMap' }
+  ).addTo(map);
+
+  // User marker
+  L.circleMarker([userLat, userLon], {
+    radius: 10, color: '#3b82f6', fillColor: '#3b82f6',
+    fillOpacity: 0.8, weight: 3
+  }).addTo(map).bindPopup("📍 You are here");
+
+  setTimeout(() => map && map.invalidateSize(), 300);
+  fetchPlaces();
+}
+
+// ===== FETCH PLACES =====
+async function fetchPlaces() {
+  document.getElementById("places").innerHTML = `
+    <div class="grid">
+      <div class="skeleton"></div>
+      <div class="skeleton"></div>
+      <div class="skeleton"></div>
+    </div>`;
+
+  try {
+    const url = `https://api.geoapify.com/v2/places?categories=tourism.sights,catering.restaurant&filter=circle:${userLon},${userLat},3000&limit=12&apiKey=${API_KEY}`;
+    const res = await fetch(url);
+
+    if (!res.ok) throw new Error("API " + res.status);
+
+    const data = await res.json();
+    renderPlaces(data.features || []);
+  } catch (e) {
+    console.error(e);
+    document.getElementById("places").innerHTML = `
+      <div style="padding:20px;text-align:center;color:#64748b">
+        ⚠️ Could not load places. Check your connection.
+      </div>`;
+  }
+}
+
+const CATEGORY_ICONS = {
+  'tourism': '🏛️',
+  'catering.restaurant': '🍽️',
+  'catering.cafe': '☕',
+  'accommodation': '🏨',
+};
+
+function getIcon(cats) {
+  if (!cats) return '📍';
+  for (const k of Object.keys(CATEGORY_ICONS)) {
+    if (cats.some(c => c.includes(k))) return CATEGORY_ICONS[k];
+  }
+  return '📍';
+}
+
+function renderPlaces(features) {
+  if (!features.length) {
+    document.getElementById("places").innerHTML = `<div style="padding:20px;text-align:center;color:#64748b">No places found nearby.</div>`;
+    return;
+  }
+
+  let html = "<div class='grid'>";
+  features.forEach(p => {
+    const props = p.properties;
+    const name = props.name || "Unnamed Place";
+    const lat = props.lat;
+    const lon = props.lon;
+    const cat = props.categories || [];
+    const icon = getIcon(cat);
+    const catLabel = cat[0] ? cat[0].replace('catering.', '').replace('tourism.', '') : 'Place';
+
+    // Add map marker
+    if (map && lat && lon) {
+      L.marker([lat, lon]).addTo(map).bindPopup(`<b>${name}</b>`);
+    }
+
+    html += `
+      <div class="card">
+        <div class="card-img">${icon}</div>
+        <div class="card-content">
+          <div class="card-name" title="${name}">${name}</div>
+          <div class="card-cat">${catLabel}</div>
+          <div class="card-actions">
+            <button class="btn-dir" onclick="direction(${lat},${lon})">🧭 Go</button>
+            <button class="btn-save" onclick="savePlace('${name.replace(/'/g,"\\'")}')">❤️</button>
+          </div>
+        </div>
+      </div>`;
+  });
+
+  html += "</div>";
+  document.getElementById("places").innerHTML = html;
+}
+
+// ===== LOCATION =====
+window.getLocation = function() {
+  if (!navigator.geolocation) {
+    showToast("Geolocation not supported");
+    return;
+  }
+  showToast("📡 Getting your location...");
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      userLat = pos.coords.latitude;
+      userLon = pos.coords.longitude;
+      initMap();
+      showToast("✅ Location updated!");
+    },
+    err => showToast("❌ Location denied: " + err.message)
+  );
+};
+
+// ===== SEARCH AUTOCOMPLETE =====
+let suggestTimeout;
+window.suggestPlaces = async function(q) {
+  clearTimeout(suggestTimeout);
+  const box = document.getElementById("suggestions");
+  if (q.length < 2) { box.innerHTML = ""; return; }
+
+  suggestTimeout = setTimeout(async () => {
+    try {
+      const res = await fetch(`https://api.geoapify.com/v1/geocode/autocomplete?text=${encodeURIComponent(q)}&apiKey=${API_KEY}`);
+      const data = await res.json();
+      let html = "";
+      (data.features || []).slice(0, 5).forEach(p => {
+        const label = p.properties.formatted || p.properties.name;
+        html += `<div onclick="selectPlace(${p.properties.lat},${p.properties.lon},'${label.replace(/'/g,"\\'")}')">📍 ${label}</div>`;
+      });
+      box.innerHTML = html;
+    } catch(e) { box.innerHTML = ""; }
+  }, 300);
+};
+
+window.selectPlace = function(lat, lon, label) {
+  userLat = lat; userLon = lon;
+  document.getElementById("suggestions").innerHTML = "";
+  document.getElementById("searchInput").value = label || "";
+  initMap();
+};
+
+// ===== DIRECTION =====
+window.direction = function(lat, lon) {
+  addPoints(5);
+  window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}`, '_blank');
+};
+
+// ===== SAVE =====
+window.savePlace = function(name) {
+  let saved = JSON.parse(localStorage.getItem("saved") || "[]");
+  if (!saved.includes(name)) {
+    saved.push(name);
+    localStorage.setItem("saved", JSON.stringify(saved));
+    addPoints(10);
+    playSound("saveSound");
+    showToast(`❤️ "${name}" saved!`);
+  } else {
+    showToast("Already saved!");
+  }
+};
+
+// ===== TABS =====
+window.showTab = function(tab) {
+  const sheet = document.getElementById("sheet");
+  const saved = document.getElementById("savedPanel");
+  const navE = document.getElementById("navExplore");
+  const navS = document.getElementById("navSaved");
+
+  if (tab === "explore") {
+    sheet.style.display = "block";
+    saved.style.display = "none";
+    navE.classList.add("active");
+    navS.classList.remove("active");
+  } else {
+    sheet.style.display = "none";
+    saved.style.display = "block";
+    navE.classList.remove("active");
+    navS.classList.add("active");
+    renderSaved();
+  }
+};
+
+function renderSaved() {
+  const list = JSON.parse(localStorage.getItem("saved") || "[]");
+  const el = document.getElementById("savedList");
+  if (!list.length) {
+    el.innerHTML = `<div style="text-align:center;color:#64748b;padding:40px">No saved places yet. Explore and save some!</div>`;
+    return;
+  }
+  el.innerHTML = list.map(name => `
+    <div class="saved-item">
+      <span>📍 ${name}</span>
+      <button onclick="removeSaved('${name.replace(/'/g,"\\'")}')">🗑️</button>
+    </div>`).join("");
+}
+
+window.removeSaved = function(name) {
+  let saved = JSON.parse(localStorage.getItem("saved") || "[]");
+  saved = saved.filter(s => s !== name);
+  localStorage.setItem("saved", JSON.stringify(saved));
+  renderSaved();
+};
+
+// ===== MENU =====
+window.toggleMenu = function() {
+  document.getElementById("menu").classList.toggle("open");
+  document.getElementById("overlay").classList.toggle("open");
+};
+
+// ===== POINTS =====
+function addPoints(n) {
+  points += n;
+  localStorage.setItem("points", points);
+  updatePointsUI();
+}
+function updatePointsUI() {
+  document.getElementById("userPoints").textContent = `⭐ ${points}`;
+}
+
+// ===== HELPERS =====
+function playSound(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.currentTime = 0;
+  el.play().catch(() => {});
+}
+
+window.showToast = function(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  setTimeout(() => t.classList.remove("show"), 2800);
+};
+
+// ===== SHEET DRAG =====
+function initSheet() {
+  const sheet = document.getElementById("sheet");
+  const handle = document.getElementById("dragHandle");
+  if (!sheet || !handle) return;
+
+  const snapPoints = {
+    full: 60,
+    mid: window.innerHeight * 0.42,
+    collapsed: window.innerHeight * 0.73
+  };
+
+  let currentTranslate = snapPoints.mid;
+  let startY = 0;
+  let isDragging = false;
+  let velocity = 0;
+  let lastY = 0;
+
+  sheet.style.transform = `translateY(${currentTranslate}px)`;
+
+  handle.addEventListener("mousedown", start);
+  handle.addEventListener("touchstart", start, { passive: true });
+
+  function start(e) {
+    isDragging = true;
+    startY = getY(e);
+    lastY = startY;
+    velocity = 0;
+    sheet.style.transition = "none";
+
+    document.addEventListener("mousemove", move);
+    document.addEventListener("touchmove", move, { passive: false });
+    document.addEventListener("mouseup", end);
+    document.addEventListener("touchend", end);
+  }
+
+  function move(e) {
+    if (!isDragging) return;
+    if (e.cancelable) e.preventDefault();
+
+    const y = getY(e);
+    velocity = y - lastY;
+    lastY = y;
+
+    const delta = y - startY;
+    let next = Math.max(snapPoints.full, Math.min(snapPoints.collapsed, currentTranslate + delta));
+
+    sheet.style.transform = `translateY(${next}px)`;
+    updateMapBlur(next / window.innerHeight);
+  }
+
+  function end(e) {
+    if (!isDragging) return;
+    isDragging = false;
+
+    const y = getY(e) || lastY;
+    const raw = currentTranslate + (y - startY) + velocity * 5;
+    const snapped = nearest(raw, Object.values(snapPoints));
+
+    currentTranslate = snapped;
+    sheet.style.transition = "transform 0.38s cubic-bezier(.22,1,.36,1)";
+    sheet.style.transform = `translateY(${snapped}px)`;
+    updateMapBlur(snapped / window.innerHeight);
+
+    document.removeEventListener("mousemove", move);
+    document.removeEventListener("touchmove", move);
+    document.removeEventListener("mouseup", end);
+    document.removeEventListener("touchend", end);
+  }
+
+  function getY(e) {
+    return e.touches ? e.touches[0].clientY : (e.changedTouches ? e.changedTouches[0].clientY : e.clientY);
+  }
+
+  function nearest(val, points) {
+    return points.reduce((prev, curr) => Math.abs(curr - val) < Math.abs(prev - val) ? curr : prev);
+  }
+}
+
+function updateMapBlur(progress) {
+  const mapEl = document.getElementById("map");
+  const backdrop = document.getElementById("backdrop");
+  if (!mapEl) return;
+
+  const blur = progress * 3;
+  const scale = 1 - progress * 0.05;
+
+  mapEl.style.transform = `scale(${scale})`;
+  mapEl.style.filter = `blur(${blur}px)`;
+
+  if (backdrop) {
+    backdrop.style.background = `rgba(0,0,0,${progress * 0.35})`;
+  }
+}
+
+// ===== PWA INSTALL =====
+let deferredPrompt;
+window.addEventListener("beforeinstallprompt", e => {
+  e.preventDefault();
+  deferredPrompt = e;
+  document.getElementById("installBtn").style.display = "block";
+});
+
+document.getElementById("installBtn").addEventListener("click", async () => {
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  const { outcome } = await deferredPrompt.userChoice;
+  deferredPrompt = null;
+  if (outcome === "accepted") document.getElementById("installBtn").style.display = "none";
+});
+
+// ===== RIPPLE =====
+document.addEventListener("click", e => {
+  const btn = e.target.closest("button");
+  if (!btn) return;
+
+  const ripple = document.createElement("span");
+  const r = btn.getBoundingClientRect();
+  ripple.style.cssText = `
+    position:absolute;width:80px;height:80px;
+    background:rgba(255,255,255,0.25);border-radius:50%;
+    left:${e.clientX - r.left - 40}px;top:${e.clientY - r.top - 40}px;
+    pointer-events:none;transform:scale(0);transition:0.4s;z-index:99;
+  `;
+  btn.style.position = "relative";
+  btn.style.overflow = "hidden";
+  btn.appendChild(ripple);
+  setTimeout(() => ripple.style.transform = "scale(2.5)", 10);
+  setTimeout(() => ripple.remove(), 450);
+});
 </script>
 
 </body>
